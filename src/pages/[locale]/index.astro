@@ -1,0 +1,8 @@
+---
+export async function getStaticPaths() {
+  return [{ params: { locale: 'en' } }, { params: { locale: 'id' } }];
+}
+
+const { locale } = Astro.params;
+return Astro.redirect(`/${locale}/blog`);
+---

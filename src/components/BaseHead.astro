@@ -1,5 +1,5 @@
 ---
-import { ClientRouter } from 'astro:transitions'
+import ClientRouter from 'astro/components/ClientRouter.astro'
 import '../styles/fonts.css'
 import '../styles/global.css'
 
@@ -10,13 +10,14 @@ export interface Props {
 }
 
 const { title, description, permalink } = Astro.props
-const socialUrl = Astro.site.href + 'assets/social.png'
+const socialUrl = `${import.meta.env.SITE}brand/ojekku-logo.svg`
 ---
 
 <!-- Global Metadata -->
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width" />
-<link rel="icon" type="image/x-icon" href="/favicon.ico" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<meta name="theme-color" content="#0b1020" />
 
 <!-- Primary Meta Tags -->
 <title>{title}</title>
@@ -41,14 +42,11 @@ const socialUrl = Astro.site.href + 'assets/social.png'
 
 <!-- This is intentionally inlined to avoid FOUC -->
 <script is:inline>
-  const root = document.documentElement
-  const theme = localStorage.getItem('theme')
-  if (
-    theme === 'dark' ||
-    (!theme && window.matchMedia('(prefers-color-scheme: dark)').matches)
-  ) {
-    root.classList.add('theme-dark')
-  } else {
-    root.classList.remove('theme-dark')
-  }
+  (function () {
+    var t = localStorage.getItem('ojekku-theme')
+    if (t !== 'light' && t !== 'dark') t = 'dark'
+    document.documentElement.dataset.theme = t
+    var meta = document.querySelector('meta[name="theme-color"]')
+    if (meta) meta.setAttribute('content', t === 'light' ? '#f8fafc' : '#0b1020')
+  })()
 </script>

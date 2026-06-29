@@ -1,64 +1,49 @@
-# [Astro](https://astro.build) Blog Template
+# Ojekku Blog
 
-[![Screenshot](screenshot.png)](https://astro-blog-template.netlify.app/)
+Blog perusahaan **Ojekku** (PT Bangkit) — cerita membangun platform mobilitas berpusat pada driver, dimulai di Salatiga.
 
-## 👉 Check out the ✨ [Live Demo](https://astro-blog-template.netlify.app/) ✨
+**Live:** [blog.ojekku.com](https://blog.ojekku.com)
 
-## 👩‍🚀 Getting Started
+## Stack
 
-### Locally
+- [Astro](https://astro.build) 7
+- Bilingual markdown content collections (`src/content/blog/`)
+- Locale routing (`/id/`, `/en/`)
+- Pagination, [Pagefind](https://pagefind.app/) search
+- Dark/light theme, SEO meta + Open Graph
+- Vitest + Playwright
 
-```
-pnpm init astro -- --template Charca/astro-blog-template
-```
+## Development
 
-### On StackBlitz
-
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/charca/astro-blog-template)
-
-## ✨ Features:
-
-- ✅ Astro 4.0
-- ✅ Dark Mode
-- ✅ Full Markdown support
-- ✅ SEO-friendly setup with canonical URLs and OpenGraph data
-- ✅ RSS 2.0 generation
-- ✅ Sitemap.xml generation
-
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
-
-```
-/
-├── public/
-│   ├── robots.txt
-│   └── favicon.ico
-├── src/
-│   ├── components/
-│   │   └── Tour.astro
-│   └── pages/
-│       └── index.astro
-└── package.json
+```bash
+pnpm install
+pnpm dev      # http://localhost:4321
+pnpm build    # includes Pagefind index
+pnpm preview
+pnpm test
+pnpm test:e2e
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+## Menambah artikel
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+```bash
+pnpm new-post "Judul artikel" url-slug
+```
 
-Any static assets, like images, can be placed in the `public/` directory.
+Membuat pasangan `.id.md` + `.en.md` di `src/content/blog/[year]/[month]/`. Lihat [`docs/content-structure.md`](docs/content-structure.md).
 
-## 🧞 Commands
+URL artikel: `/{locale}/blog/{slug}` (mis. `/id/blog/kenapa-ojekku-dimulai-di-salatiga`).
 
-All commands are run from the root of the project, from a terminal:
+## Deploy (Netlify)
 
-| Command           | Action                                       |
-| :---------------- | :------------------------------------------- |
-| `pnpm install`     | Installs dependencies                        |
-| `pnpm dev`     | Starts local dev server at `localhost:3030`  |
-| `pnpm build`   | Build your production site to `./dist/`      |
-| `pnpm preview` | Preview your build locally, before deploying |
+- Build command: `pnpm build`
+- Publish directory: `dist`
+- Custom domain: `blog.ojekku.com` (CNAME → Netlify)
 
-## 👀 Want to learn more?
+Konfigurasi ada di [`netlify.toml`](netlify.toml). Push ke `main` memicu deploy otomatis setelah repo terhubung ke Netlify.
 
-Feel free to check [Astro's documentation](https://github.com/withastro/astro) or jump into Astro's [Discord server](https://astro.build/chat).
+URL lama (`/blog/...`, `/about`) di-redirect ke locale Indonesia (`/id/blog`).
+
+## Visi perusahaan
+
+Konteks produk Ojekku dan prioritas PT Bangkit: [`bangkit-project/AGENTS.md`](https://github.com/bangkit-project/bangkit-project/blob/main/AGENTS.md).

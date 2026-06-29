@@ -1,0 +1,28 @@
+[build]
+  command = "pnpm build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22.12.0"
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[redirects]]
+  from = "/blog"
+  to = "/id/blog"
+  status = 301
+
+[[redirects]]
+  from = "/blog/:slug"
+  to = "/id/blog/:slug"
+  status = 301
+
+[[redirects]]
+  from = "/about"
+  to = "/id/blog"
+  status = 301

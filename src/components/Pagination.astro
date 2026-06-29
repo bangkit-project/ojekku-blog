@@ -1,0 +1,112 @@
+---
+export interface Props {
+  show?: boolean;
+}
+
+const { show = true } = Astro.props;
+---
+
+{show && (
+  <nav class="pagination" data-testid="pagination">
+    <div class="pagination-grid" data-testid="pagination-grid">
+      <div class="pagination-slot pagination-prev" data-testid="pagination-prev">
+        <slot name="prev" />
+      </div>
+      <div class="pagination-slot pagination-center" data-testid="pagination-center">
+        <slot />
+      </div>
+      <div class="pagination-slot pagination-next" data-testid="pagination-next">
+        <slot name="next" />
+      </div>
+    </div>
+  </nav>
+)}
+
+<style>
+  .pagination {
+    margin-top: 2em;
+    font-family: var(--font-family-sans);
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+  }
+
+  .pagination-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    align-items: center;
+    gap: 0.5em;
+  }
+
+  .pagination-slot {
+    display: flex;
+    align-items: center;
+  }
+
+  .pagination-prev {
+    justify-content: flex-start;
+  }
+
+  .pagination-center {
+    justify-content: center;
+  }
+
+  .pagination-next {
+    justify-content: flex-end;
+  }
+
+  .pagination :global(.pagination-btn) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 1px solid var(--text-secondary);
+    border-radius: 6px;
+    color: inherit;
+    text-decoration: none;
+    background: transparent;
+    cursor: pointer;
+    opacity: 0.8;
+  }
+
+  .pagination :global(.pagination-btn:hover) {
+    opacity: 1;
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+  }
+
+  .pagination :global(.pagination-picker) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 2.25rem;
+    padding: 0 0.75rem;
+    border: 1px solid var(--text-secondary);
+    border-radius: 6px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: var(--font-family-sans);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+  }
+
+  .pagination :global(.pagination-picker:hover) {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+  }
+
+  .pagination :global(.sr-only) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+</style>

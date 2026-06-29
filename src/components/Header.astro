@@ -1,8 +1,14 @@
 ---
 import Logo from './Logo.astro'
 import Nav from './Nav.astro'
+import type { Locale } from '../lib/translations';
 
-const { current = '' } = Astro.props;
+export interface Props {
+  current?: string;
+  lang?: Locale;
+}
+
+const { current = '', lang = 'id' } = Astro.props;
 ---
 
 <style>
@@ -22,6 +28,6 @@ const { current = '' } = Astro.props;
 </style>
 
 <header>
-  <Logo />
-  <Nav current={current} />
+  <Logo lang={lang} />
+  <Nav current={current} lang={lang} />
 </header>

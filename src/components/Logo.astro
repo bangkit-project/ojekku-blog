@@ -1,16 +1,42 @@
+---
+import type { Locale } from '../lib/translations';
+
+export interface Props {
+  lang?: Locale;
+}
+
+const { lang = 'id' } = Astro.props;
+---
+
 <style>
+  .logo-link {
+    align-items: center;
+    display: flex;
+    gap: 0.5rem;
+    text-decoration: none;
+    color: inherit;
+  }
+
   img {
     display: block;
-    width: 75px;
+    height: 40px;
+    width: auto;
+  }
+
+  .logo-text {
+    font-family: var(--font-family-sans);
+    font-size: 1.25rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
   }
 
   @media screen and (max-width: 520px) {
-    img {
-      display: none;
+    .logo-text {
+      font-size: 1rem;
     }
   }
 </style>
 
-<a href="/">
-  <img alt="Blog Logo" src="/assets/logo.webp" width="75" height="50" />
+<a class="logo-link" href={`/${lang}/blog`}>
+  <img alt="Ojekku" src="/brand/ojekku-logo.svg" width="120" height="40" />
 </a>

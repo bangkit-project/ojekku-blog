@@ -1,0 +1,59 @@
+---
+export interface Props {
+  src?: string;
+  alt?: string;
+  className?: string;
+  width?: number;
+  height?: number;
+  eager?: boolean;
+}
+
+const {
+  src,
+  alt = "",
+  className = "cover-image",
+  width = 800,
+  height = 400,
+  eager = false,
+} = Astro.props;
+
+if (!src) {
+  return;
+}
+
+const loading = eager ? "eager" : "lazy";
+const decoding = eager ? "sync" : "async";
+const isRemote = src.startsWith("http://") || src.startsWith("https://");
+const isPublic = src.startsWith("/");
+---
+
+{(isRemote || isPublic) ? (
+  <img
+    src={src}
+    alt={alt}
+    width={width}
+    height={height}
+    loading={loading}
+    decoding={decoding}
+    class={className}
+  />
+) : (
+  <img
+    src={src}
+    alt={alt}
+    width={width}
+    height={height}
+    loading={loading}
+    decoding={decoding}
+    class={className}
+  />
+)}
+
+<style>
+  .cover-image {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: 6px;
+  }
+</style>
