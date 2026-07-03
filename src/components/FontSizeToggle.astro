@@ -1,0 +1,36 @@
+---
+import { t, type Locale } from "../lib/translations";
+
+interface Props {
+  locale: Locale;
+  class?: string;
+}
+
+const { locale, class: className = "" } = Astro.props;
+---
+
+<nav
+  class:list={["font-size-toggle", className]}
+  aria-label={t("fontSizeSwitchLabel", locale)}
+  aria-valuemin="0"
+  aria-valuemax="4"
+  aria-valuenow="1"
+>
+  <button
+    type="button"
+    class="font-size-toggle__btn"
+    data-font-size-step="down"
+    aria-label={t("fontSizeDecrease", locale)}
+    disabled
+  >
+    −
+  </button>
+  <button
+    type="button"
+    class="font-size-toggle__btn"
+    data-font-size-step="up"
+    aria-label={t("fontSizeIncrease", locale)}
+  >
+    +
+  </button>
+</nav>

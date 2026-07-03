@@ -2,22 +2,19 @@
 import { getCollection } from 'astro:content';
 import { parseBlogEntryId, type BlogData } from '../../../content.config';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
-import CoverImage from '../../../components/CoverImage.astro';
 import Pagination from '../../../components/Pagination.astro';
+import PostListItem from '../../../components/PostListItem.astro';
 import { getPageSlice, getTotalPages } from '../../../lib/pagination';
-import { getReadingTimeMinutes, formatReadingTime } from '../../../lib/reading-time';
 import { t, tBlogHeaderTitle, tBlogSiteTitle, tPageOf } from '../../../lib/translations';
-import { getAuthor } from '../../../lib/authors';
+import { PUBLIC_LOCALES } from '../../../lib/locale-path';
 import type { Locale } from '../../../lib/translations';
 
-const LOCALES: Locale[] = ['en', 'id'];
-
 export async function getStaticPaths() {
-  return [{ params: { locale: 'en' } }, { params: { locale: 'id' } }];
+  return PUBLIC_LOCALES.map((locale) => ({ params: { locale } }));
 }
 
 const { locale } = Astro.params as { locale: string };
-if (!LOCALES.includes(locale as Locale)) return Astro.redirect('/id/');
+if (!PUBLIC_LOCALES.includes(locale as Locale)) return Astro.redirect('/id/blog');
 const lang = locale as Locale;
 
 const allEntries = await getCollection('blog', ({ data }) => !data.draft);
@@ -33,55 +30,31 @@ const title = tBlogSiteTitle(lang);
 const permalink = `${Astro.site?.href ?? ''}${lang}/blog`;
 ---
 
-<BaseLayout title={title} description={title} permalink={permalink} current="blog" lang={lang}>
+<BaseLayout
+  title={title}
+  description={title}
+  headerTitle={tBlogHeaderTitle(lang)}
+  permalink={permalink}
+  current="blog"
+  lang={lang}
+  pageKind="blog"
+>
   <div class="container">
-    <h1>{tBlogHeaderTitle(lang)}</h1>
     <ul class="post-list">
-      {entries.map((entry) => {
+      {entries.map((entry, index) => {
         const parsed = parseBlogEntryId(entry.id);
         if (!parsed) return null;
-        const { slug } = parsed;
         const data = entry.data as BlogData;
-        const cover = data.coverImage;
-        const author = getAuthor(data.authorId);
         return (
-          <li id={`post-${slug}`} class="post-list-item">
-            <a
-              href={`/${lang}/blog/${slug}${currentPage > 1 ? `?from=${currentPage}` : ''}`}
-              class="post-list-link"
-            >
-              <div class="post-list-row">
-                <div>
-                  <strong>{data.title}</strong>
-                  <p>{data.description}</p>
-                  {author && (
-                    <div class="post-list-meta">
-                      <img src={author.avatarUrl} alt={author.name} width="32" height="32" loading="lazy" />
-                      <div>
-                        <p><strong>{author.name}</strong></p>
-                        <p>
-                          <time datetime={data.publishDate.toISOString()}>
-                            {data.publishDate.toLocaleDateString(dateLocale, {
-                              year: 'numeric',
-                              month: 'short',
-                              day: 'numeric',
-                            })}
-                          </time>
-                          {' · '}
-                          <span>{formatReadingTime(getReadingTimeMinutes(entry.body ?? ''), lang)}</span>
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                {cover && (
-                  <div class="post-list-cover">
-                    <CoverImage src={cover} alt={data.title} width={480} height={240} />
-                  </div>
-                )}
-              </div>
-            </a>
-          </li>
+          <PostListItem
+            slug={parsed.slug}
+            lang={lang}
+            data={data}
+            body={entry.body ?? ''}
+            dateLocale={dateLocale}
+            currentPage={currentPage}
+            featured={index === 0}
+          />
         );
       })}
     </ul>

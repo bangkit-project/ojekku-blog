@@ -4,11 +4,11 @@ title: Kenapa Ojekku dimulai di Salatiga
 description: Ojekku lahir dari pengalaman sebagai driver — ekonomi, anonimitas dispatch, dan keinginan kontak langsung dengan rider. Salatiga jadi titik awal yang realistis.
 publishDate: "2026-06-22T10:00:00"
 draft: false
-coverImage: "/assets/blog/salatiga-cover.svg"
-authorId: ojekku
+coverImage: "/assets/blog/salatiga-cover.jpg"
+authorId: andri.ys.st@gmail.com
+telegramUrl: "https://t.me/ojekku_channel/27"
+telegramMessageIds: [27]
 ---
-
-![Pemandangan kota kecil — metafora awal yang fokus](/assets/blog/salatiga-cover.svg)
 
 ## Masalah yang dirasakan sebagai driver
 

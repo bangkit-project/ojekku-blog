@@ -4,11 +4,13 @@ title: Why Ojekku starts in Salatiga
 description: Ojekku was born from experience as a driver — platform economics, anonymous dispatch, and the need for direct rider contact. Salatiga is a realistic starting point.
 publishDate: "2026-06-22T10:00:00"
 draft: false
-coverImage: "/assets/blog/salatiga-cover.svg"
+coverImage: "/assets/blog/salatiga-cover.jpg"
 authorId: ojekku
 ---
 
-![A small-town view — a metaphor for a focused start](/assets/blog/salatiga-cover.svg)
+![Salatiga city landmark in the Plumpungan area](/assets/blog/salatiga-cover.jpg)
+
+*Photo: [Salatiga–Bawen Toll Road section, Plumpungan area](https://commons.wikimedia.org/wiki/File:Ruas_Tol_Salatiga%E2%80%93Bawen_Area_Plumpungan.jpg) — Wikimedia Commons*
 
 ## Problems felt as a driver
 

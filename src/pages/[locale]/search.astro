@@ -1,17 +1,16 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import Pagination from '../../components/Pagination.astro';
+import { PUBLIC_LOCALES } from '../../lib/locale-path';
 import type { Locale } from '../../lib/translations';
 import { t, tPageOf } from '../../lib/translations';
 
-const LOCALES: Locale[] = ['en', 'id'];
-
 export async function getStaticPaths() {
-  return [{ params: { locale: 'en' } }, { params: { locale: 'id' } }];
+  return PUBLIC_LOCALES.map((locale) => ({ params: { locale } }));
 }
 
 const { locale } = Astro.params as { locale: string };
-if (!LOCALES.includes(locale as Locale)) return Astro.redirect('/id/');
+if (!PUBLIC_LOCALES.includes(locale as Locale)) return Astro.redirect('/id/blog');
 const lang = locale as Locale;
 const permalink = `${Astro.site?.href ?? ''}${lang}/search`;
 ---
@@ -19,12 +18,12 @@ const permalink = `${Astro.site?.href ?? ''}${lang}/search`;
 <BaseLayout
   title={t('searchTitle', lang)}
   description={t('searchDescription', lang)}
+  headerTitle={t('searchTitle', lang)}
   permalink={permalink}
   current="search"
   lang={lang}
 >
   <div class="container">
-    <h1>{t('searchTitle', lang)}</h1>
     <p class="search-hint">{t('searchHint', lang)}</p>
 
     <form class="search-form" action={`/${lang}/search`} method="get" role="search">

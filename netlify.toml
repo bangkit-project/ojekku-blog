@@ -26,3 +26,13 @@
   from = "/about"
   to = "/id/blog"
   status = 301
+
+[[redirects]]
+  from = "/en"
+  to = "/id/blog"
+  status = 301
+
+[[redirects]]
+  from = "/en/*"
+  to = "/id/:splat"
+  status = 301

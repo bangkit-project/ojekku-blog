@@ -1,5 +1,5 @@
 ---
-import LanguageSwitcher from './LanguageSwitcher.astro';
+import FontSizeToggle from './FontSizeToggle.astro';
 import ThemeToggle from './ThemeToggle.astro';
 import { t, type Locale } from '../lib/translations';
 
@@ -25,17 +25,6 @@ const localePrefix = `/${lang}`;
 
   .nav-chrome {
     margin-left: 12px;
-  }
-
-  nav :global(.lang-switcher__link) {
-    margin-left: 0;
-    min-width: auto;
-    opacity: 1;
-    text-transform: none;
-  }
-
-  nav :global(.lang-switcher__link::before) {
-    display: none;
   }
 
   .nav-search-pill {
@@ -104,6 +93,6 @@ const localePrefix = `/${lang}`;
       </a>
     </div>
     <ThemeToggle locale={lang} />
-    <LanguageSwitcher locale={lang} />
+    <FontSizeToggle locale={lang} />
   </div>
 </nav>

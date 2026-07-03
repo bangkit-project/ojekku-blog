@@ -7,24 +7,25 @@ import Pagination from '../../../components/Pagination.astro';
 import Bio from '../../../components/Bio.astro';
 import { getReadingTimeMinutes, formatReadingTime } from '../../../lib/reading-time';
 import { t, tBlogHeaderTitle } from '../../../lib/translations';
-import { getAuthor } from '../../../lib/authors';
+import AuthorByline from '../../../components/AuthorByline.astro';
+import CommentSection from '../../../components/CommentSection.astro';
+import { getIdEquivalentPath, PUBLIC_LOCALES } from '../../../lib/locale-path';
 import type { Locale } from '../../../lib/translations';
-
-const LOCALES: Locale[] = ['en', 'id'];
 
 export async function getStaticPaths() {
   const entries = await getCollection('blog', ({ data }) => !data.draft);
   const paths: { params: { locale: string; slug: string } }[] = [];
   for (const entry of entries) {
     const parsed = parseBlogEntryId(entry.id);
-    if (!parsed) continue;
+    if (!parsed || parsed.lang !== 'id') continue;
     paths.push({ params: { locale: parsed.lang, slug: parsed.slug } });
   }
   return paths;
 }
 
 const { locale, slug } = Astro.params as { locale: string; slug: string };
-if (!LOCALES.includes(locale as Locale)) return Astro.redirect('/id/');
+if (locale === 'en') return Astro.redirect(getIdEquivalentPath(Astro.url));
+if (!PUBLIC_LOCALES.includes(locale as Locale)) return Astro.redirect('/id/blog');
 const lang = locale as Locale;
 
 if (!slug) return Astro.redirect(`/${lang}/blog`);
@@ -58,11 +59,18 @@ const newerData = newerEntry ? (newerEntry.data as BlogData) : undefined;
 const olderData = olderEntry ? (olderEntry.data as BlogData) : undefined;
 const readingTime = getReadingTimeMinutes(entry.body ?? '');
 const dateLocale = lang === 'en' ? 'en-US' : 'id-ID';
-const author = getAuthor(data.authorId);
 const permalink = `${Astro.site?.href ?? ''}${lang}/blog/${slug}`;
 ---
 
-<BaseLayout title={data.title} description={data.description} permalink={permalink} current="blog" lang={lang}>
+<BaseLayout
+  title={data.title}
+  description={data.description}
+  headerTitle={tBlogHeaderTitle(lang)}
+  permalink={permalink}
+  current="blog"
+  lang={lang}
+  pageKind="article"
+>
   <script>
     const params = new URLSearchParams(window.location.search);
     const from = params.get('from');
@@ -88,29 +96,34 @@ const permalink = `${Astro.site?.href ?? ''}${lang}/blog/${slug}`;
     <article class="content" data-pagefind-body>
       <div data-pagefind-filter={`locale:${lang}`}></div>
       <header class="post-article-header">
-        <h1 data-pagefind-meta="title">{data.title}</h1>
-        <p data-pagefind-meta="description">{data.description}</p>
-        <hr />
+        <h1 class="post-article-title">{data.title}</h1>
+        {data.description && (
+          <p data-pagefind-meta="description">{data.description}</p>
+        )}
       </header>
 
-      {author && (
-        <div class="post-article-meta">
-          <img src={author.avatarUrl} alt={author.name} width="40" height="40" loading="lazy" />
-          <div>
-            <p><strong>{author.name}</strong></p>
-            <p>
-              <time datetime={data.publishDate.toISOString()}>
-                {data.publishDate.toLocaleDateString(dateLocale, {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })}
-              </time>
-              {' · '}
-              <span>{formatReadingTime(readingTime, lang)}</span>
-            </p>
-          </div>
-        </div>
+      {data.authorId && (
+        <AuthorByline authorId={data.authorId} variant="article">
+          <span slot="meta">
+            <time datetime={data.publishDate.toISOString()}>
+              {data.publishDate.toLocaleDateString(dateLocale, {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
+            </time>
+            {' · '}
+            <span>{formatReadingTime(readingTime, lang)}</span>
+          </span>
+        </AuthorByline>
+      )}
+
+      {data.telegramUrl && (
+        <p class="telegram-discussion">
+          <a href={data.telegramUrl} rel="noopener noreferrer" target="_blank">
+            {t('telegramDiscussion', lang)}
+          </a>
+        </p>
       )}
 
       {data.coverImage && (
@@ -128,6 +141,14 @@ const permalink = `${Astro.site?.href ?? ''}${lang}/blog/${slug}`;
       )}
 
       <Content />
+
+      {data.telegramUrl && data.telegramMessageIds?.[0] && (
+        <CommentSection
+          channelMessageId={data.telegramMessageIds[0]}
+          lang={lang}
+          telegramUrl={data.telegramUrl}
+        />
+      )}
 
       {(newerSlug || olderSlug) && (
         <nav class="post-nav">
@@ -172,7 +193,25 @@ const permalink = `${Astro.site?.href ?? ''}${lang}/blog/${slug}`;
 </BaseLayout>
 
 <style>
+  .telegram-discussion {
+    margin: 0 0 1.5rem;
+  }
+
+  .telegram-discussion a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .telegram-discussion a:hover {
+    text-decoration: underline;
+  }
+
   .article-cover {
-    margin-bottom: 1.5em;
+    margin: 0 0 2rem;
+  }
+
+  .article-cover :global(.cover-image) {
+    border-radius: 4px;
+    width: 100%;
   }
 </style>

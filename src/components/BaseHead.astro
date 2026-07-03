@@ -48,5 +48,15 @@ const socialUrl = `${import.meta.env.SITE}brand/ojekku-logo.svg`
     document.documentElement.dataset.theme = t
     var meta = document.querySelector('meta[name="theme-color"]')
     if (meta) meta.setAttribute('content', t === 'light' ? '#f8fafc' : '#0b1020')
+
+    var stored = localStorage.getItem('ojekku-font-size')
+    var level = 1
+    if (stored === 'normal') level = 1
+    else if (stored === 'large') level = 2
+    else {
+      var parsed = parseInt(stored, 10)
+      if (!isNaN(parsed) && parsed >= 0 && parsed <= 4) level = parsed
+    }
+    document.documentElement.dataset.fontSize = String(level)
   })()
 </script>

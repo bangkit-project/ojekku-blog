@@ -30,7 +30,7 @@ function sanitizeSlug(input: string): string {
 function formatTimestamp(): string {
   const now = new Date();
   const date = now.toISOString().slice(0, 10);
-  const time = now.toTimeString().slice(0, 8).replace(/-/g, "-");
+  const time = now.toTimeString().slice(0, 8).replace(/:/g, "-");
   return `${date}_${time}`;
 }
 
@@ -53,6 +53,8 @@ authorId: ojekku
 # tags: []
 # coverImage: ""
 # updatedDate: ""
+# telegramUrl: ""          # set by pnpm tg-sync
+# telegramMessageIds: []   # set by pnpm tg-sync
 ---
 
 `;

@@ -14,9 +14,11 @@
 | `publishDate` | string (ISO 8601) | yes | Populated by new-post from filename timestamp. Override in frontmatter when needed. |
 | `draft` | boolean | no | If `true`, exclude from build. Default `false`. |
 | `tags` | string[] | no | For filtering, archives, related posts. |
-| `coverImage` | string | no | Path to featured image (OG, social, lists). |
+| `coverImage` | string | no | Path to featured image (OG, social, lists). Not sent to Telegram. |
 | `updatedDate` | string (ISO 8601) | no | Show "last updated" when set. |
 | `authorId` | `"ojekku"` | yes | Author registry key. |
+| `telegramUrl` | string (URL) | no | Deep link to the Telegram channel post. Set automatically by `pnpm tg-sync`. Used for discussion CTA and to show the read-only comment section. |
+| `telegramMessageIds` | number[] | no | Telegram message IDs for edit/sync and blog-api binding. Set automatically by `pnpm tg-sync`. |
 
 # new-post script
 

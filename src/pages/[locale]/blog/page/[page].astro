@@ -2,33 +2,26 @@
 import { getCollection } from 'astro:content';
 import { parseBlogEntryId, type BlogData } from '../../../../content.config';
 import BaseLayout from '../../../../layouts/BaseLayout.astro';
-import CoverImage from '../../../../components/CoverImage.astro';
 import Pagination from '../../../../components/Pagination.astro';
+import PostListItem from '../../../../components/PostListItem.astro';
 import { getPageSlice, getTotalPages } from '../../../../lib/pagination';
-import { getReadingTimeMinutes, formatReadingTime } from '../../../../lib/reading-time';
 import { t, tBlogHeaderTitle, tBlogPageTitle, tPageOf } from '../../../../lib/translations';
-import { getAuthor } from '../../../../lib/authors';
+import { PUBLIC_LOCALES } from '../../../../lib/locale-path';
 import type { Locale } from '../../../../lib/translations';
-
-const LOCALES: Locale[] = ['en', 'id'];
 
 export async function getStaticPaths() {
   const allEntries = await getCollection('blog', ({ data }) => !data.draft);
-  const totalPagesEn = getTotalPages(allEntries.filter((e) => e.id.endsWith('--en')).length);
   const totalPagesId = getTotalPages(allEntries.filter((e) => e.id.endsWith('--id')).length);
   const paths: { params: { locale: string; page: string } }[] = [];
-  for (const loc of ['en', 'id'] as const) {
-    const totalPages = loc === 'en' ? totalPagesEn : totalPagesId;
-    if (totalPages <= 1) continue;
-    for (let i = 2; i <= totalPages; i++) {
-      paths.push({ params: { locale: loc, page: String(i) } });
-    }
+  if (totalPagesId <= 1) return paths;
+  for (let i = 2; i <= totalPagesId; i++) {
+    paths.push({ params: { locale: 'id', page: String(i) } });
   }
   return paths;
 }
 
 const { locale, page } = Astro.params as { locale: string; page: string };
-if (!LOCALES.includes(locale as Locale)) return Astro.redirect('/id/');
+if (!PUBLIC_LOCALES.includes(locale as Locale)) return Astro.redirect('/id/blog');
 const lang = locale as Locale;
 
 const currentPage = page ? parseInt(page, 10) : 2;
@@ -48,52 +41,30 @@ const title = tBlogPageTitle(currentPage, lang);
 const permalink = `${Astro.site?.href ?? ''}${lang}/blog/page/${currentPage}`;
 ---
 
-<BaseLayout title={title} description={title} permalink={permalink} current="blog" lang={lang}>
+<BaseLayout
+  title={title}
+  description={title}
+  headerTitle={tBlogHeaderTitle(lang)}
+  permalink={permalink}
+  current="blog"
+  lang={lang}
+  pageKind="blog"
+>
   <div class="container">
-    <h1>{tBlogHeaderTitle(lang)}</h1>
     <ul class="post-list">
       {entries.map((entry) => {
         const parsed = parseBlogEntryId(entry.id);
         if (!parsed) return null;
-        const { slug } = parsed;
         const data = entry.data as BlogData;
-        const cover = data.coverImage;
-        const author = getAuthor(data.authorId);
         return (
-          <li id={`post-${slug}`} class="post-list-item">
-            <a href={`/${lang}/blog/${slug}?from=${currentPage}`} class="post-list-link">
-              <div class="post-list-row">
-                <div>
-                  <strong>{data.title}</strong>
-                  <p>{data.description}</p>
-                  {author && (
-                    <div class="post-list-meta">
-                      <img src={author.avatarUrl} alt={author.name} width="32" height="32" loading="lazy" />
-                      <div>
-                        <p><strong>{author.name}</strong></p>
-                        <p>
-                          <time datetime={data.publishDate.toISOString()}>
-                            {data.publishDate.toLocaleDateString(dateLocale, {
-                              year: 'numeric',
-                              month: 'short',
-                              day: 'numeric',
-                            })}
-                          </time>
-                          {' · '}
-                          <span>{formatReadingTime(getReadingTimeMinutes(entry.body ?? ''), lang)}</span>
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
-                {cover && (
-                  <div class="post-list-cover">
-                    <CoverImage src={cover} alt={data.title} width={480} height={240} />
-                  </div>
-                )}
-              </div>
-            </a>
-          </li>
+          <PostListItem
+            slug={parsed.slug}
+            lang={lang}
+            data={data}
+            body={entry.body ?? ''}
+            dateLocale={dateLocale}
+            currentPage={currentPage}
+          />
         );
       })}
     </ul>

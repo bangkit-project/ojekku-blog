@@ -13,10 +13,9 @@ test.beforeEach(async ({ page }) => {
 });
 
 test.describe("Pagination layout", () => {
-  for (const locale of ["en", "id"] as const) {
-    test(`${locale} blog page 2 has 3-column pagination layout`, async ({ page }) => {
+  test("id blog page 2 has 3-column pagination layout", async ({ page }) => {
       await page.setViewportSize({ width: 1280, height: 720 });
-      await page.goto(`/${locale}/blog/page/2`, { waitUntil: "networkidle" });
+      await page.goto("/id/blog/page/2", { waitUntil: "networkidle" });
 
       const nav = page.getByTestId("pagination");
       const grid = page.getByTestId("pagination-grid");
@@ -50,6 +49,5 @@ test.describe("Pagination layout", () => {
       expect(c.right).toBeLessThanOrEqual(n.left + 1);
       expect(Math.abs(p.top - c.top)).toBeLessThan(20);
       expect(Math.abs(n.top - c.top)).toBeLessThan(20);
-    });
-  }
+  });
 });

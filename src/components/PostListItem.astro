@@ -1,0 +1,73 @@
+---
+import CoverImage from './CoverImage.astro';
+import type { BlogData } from '../content.config';
+import { getReadingTimeMinutes, formatReadingTime } from '../lib/reading-time';
+import type { Locale } from '../lib/translations';
+
+interface Props {
+  slug: string;
+  lang: Locale;
+  data: BlogData;
+  body?: string;
+  dateLocale: string;
+  currentPage: number;
+  featured?: boolean;
+}
+
+const { slug, lang, data, body = '', dateLocale, currentPage, featured = false } = Astro.props;
+const cover = data.coverImage;
+const href = `/${lang}/blog/${slug}${currentPage > 1 ? `?from=${currentPage}` : ''}`;
+const readingTime = formatReadingTime(getReadingTimeMinutes(body), lang);
+const formattedDate = data.publishDate.toLocaleDateString(dateLocale, {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric',
+});
+---
+
+{featured ? (
+  <li id={`post-${slug}`} class="post-list-item post-list-item--featured">
+    <a href={href} class="post-list-link post-list-hero">
+      {cover ? (
+        <CoverImage
+          src={cover}
+          alt={data.title}
+          className="post-list-hero-image"
+          width={1200}
+          height={514}
+          eager
+        />
+      ) : (
+        <div class="post-list-hero-placeholder" aria-hidden="true" />
+      )}
+      <div class="post-list-hero-overlay">
+        <strong>{data.title}</strong>
+        <p class="post-list-meta">
+          <time datetime={data.publishDate.toISOString()}>{formattedDate}</time>
+          {' · '}
+          <span>{readingTime}</span>
+        </p>
+      </div>
+    </a>
+  </li>
+) : (
+  <li id={`post-${slug}`} class="post-list-item">
+    <a href={href} class="post-list-link">
+      <div class="post-list-row">
+        {cover && (
+          <div class="post-list-cover">
+            <CoverImage src={cover} alt={data.title} width={320} height={180} />
+          </div>
+        )}
+        <div class="post-list-content">
+          <strong>{data.title}</strong>
+          <p class="post-list-meta">
+            <time datetime={data.publishDate.toISOString()}>{formattedDate}</time>
+            {' · '}
+            <span>{readingTime}</span>
+          </p>
+        </div>
+      </div>
+    </a>
+  </li>
+)}

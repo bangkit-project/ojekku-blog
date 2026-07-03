@@ -30,6 +30,27 @@ describe("parseFilename", () => {
     });
   });
 
+  it("parses new-post output (hyphen-separated time, draft slug)", () => {
+    expect(
+      parseFilename("2026-07-01_19-56-04_draft-1782910564390.en.md"),
+    ).toEqual({
+      slug: "draft-1782910564390",
+      lang: "en",
+    });
+    expect(
+      parseFilename("2026/07/2026-07-01_19-56-04_draft-1782910564390.id.md"),
+    ).toEqual({
+      slug: "draft-1782910564390",
+      lang: "id",
+    });
+  });
+
+  it("returns null for colon-separated time (legacy new-post bug)", () => {
+    expect(
+      parseFilename("2026-07-01_19:56:04_draft-1782910564390.en.md"),
+    ).toBeNull();
+  });
+
   it("returns null for invalid format", () => {
     expect(parseFilename("invalid.md")).toBeNull();
     expect(parseFilename("my-post.md")).toBeNull();

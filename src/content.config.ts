@@ -12,7 +12,9 @@ export const blogSchema = z.object({
   tags: z.array(z.string()).optional(),
   coverImage: z.string().optional(),
   updatedDate: z.coerce.date().optional(),
-  authorId: z.literal("ojekku"),
+  authorId: z.string().min(1),
+  telegramUrl: z.string().url().optional(),
+  telegramMessageIds: z.array(z.number().int().positive()).optional(),
 });
 
 export type BlogData = z.infer<typeof blogSchema>;
@@ -22,8 +24,9 @@ const blog = defineCollection({
     pattern: "**/*.{en,id}.md",
     base: "./src/content/blog",
     generateId: ({ entry }) => {
-      const parsed = parseFilename(entry);
-      if (!parsed) return entry.replace(/\.md$/, "").replace(/\./g, "--");
+      const basename = entry.split("/").pop() ?? entry;
+      const parsed = parseFilename(basename);
+      if (!parsed) return basename.replace(/\.md$/, "").replace(/\./g, "--");
       return `${parsed.slug}--${parsed.lang}`;
     },
   }),

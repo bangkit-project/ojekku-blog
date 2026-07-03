@@ -1,6 +1,8 @@
 ---
+import { PUBLIC_LOCALES } from '../../lib/locale-path';
+
 export async function getStaticPaths() {
-  return [{ params: { locale: 'en' } }, { params: { locale: 'id' } }];
+  return PUBLIC_LOCALES.map((locale) => ({ params: { locale } }));
 }
 
 const { locale } = Astro.params;

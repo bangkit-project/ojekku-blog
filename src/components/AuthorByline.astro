@@ -1,0 +1,59 @@
+---
+import type { AuthorId } from '../lib/authors';
+import { getAuthor } from '../lib/authors';
+
+interface Props {
+  authorId: AuthorId;
+  /** compact = list cards; article = post header */
+  variant?: 'compact' | 'article';
+}
+
+const { authorId, variant = 'compact' } = Astro.props;
+const author = getAuthor(authorId);
+if (!author) return null;
+
+const imgSize = variant === 'article' ? 40 : 32;
+const className = variant === 'article' ? 'post-article-meta' : 'post-list-meta';
+const hasMeta = Astro.slots.has('meta');
+---
+
+<div
+  class={className}
+  data-author-byline
+  data-author-id={authorId}
+>
+  <img
+    src={author.avatarUrl}
+    alt={author.name}
+    width={imgSize}
+    height={imgSize}
+    loading="lazy"
+    data-author-avatar
+  />
+  <div>
+    <p><strong data-author-name>{author.name}</strong></p>
+    {hasMeta && (
+      <p>
+        <slot name="meta" />
+      </p>
+    )}
+  </div>
+</div>
+
+<script>
+  import { hydrateAuthorByline } from '../lib/authorProfile.client';
+
+  function initAuthorBylines() {
+    document.querySelectorAll<HTMLElement>('[data-author-byline][data-author-id]').forEach((root) => {
+      if (root.dataset.hydrated === 'true') return;
+      const authorId = root.dataset.authorId;
+      const nameEl = root.querySelector<HTMLElement>('[data-author-name]');
+      const avatarEl = root.querySelector<HTMLImageElement>('[data-author-avatar]');
+      if (!authorId || !nameEl || !avatarEl) return;
+      void hydrateAuthorByline({ root, authorId, nameEl, avatarEl });
+    });
+  }
+
+  initAuthorBylines();
+  document.addEventListener('astro:page-load', initAuthorBylines);
+</script>

@@ -1,0 +1,271 @@
+---
+import type { Locale } from '../lib/translations';
+
+interface Props {
+  channelMessageId: number;
+  lang: Locale;
+  telegramUrl: string;
+}
+
+const { channelMessageId, lang, telegramUrl } = Astro.props;
+
+const labels = {
+  title: lang === 'id' ? 'Komentar' : 'Comments',
+  cta: lang === 'id' ? 'Komentar di Telegram' : 'Comment on Telegram',
+  ctaHint:
+    lang === 'id'
+      ? 'Komentar dan reaksi disinkronkan dari channel Telegram.'
+      : 'Comments and reactions are synced from the Telegram channel.',
+  loading: lang === 'id' ? 'Memuat komentar…' : 'Loading comments…',
+  empty: lang === 'id' ? 'Belum ada komentar.' : 'No comments yet.',
+  error: lang === 'id' ? 'Gagal memuat komentar.' : 'Failed to load comments.',
+};
+---
+
+<section
+  class="comment-section"
+  data-comment-section
+  data-channel-message-id={channelMessageId}
+  data-lang={lang}
+  data-telegram-url={telegramUrl}
+>
+  <h2>{labels.title}</h2>
+  <p class="comment-section__hint">{labels.ctaHint}</p>
+
+  <div class="comment-reactions" data-comment-reactions hidden></div>
+
+  <p class="comment-section__status" data-comment-status hidden>{labels.loading}</p>
+  <ul class="comment-list" data-comment-list></ul>
+  <p class="comment-section__empty" data-comment-empty hidden>{labels.empty}</p>
+  <p class="comment-section__error" data-comment-error hidden>{labels.error}</p>
+
+  <p class="comment-section__cta">
+    <a href={telegramUrl} rel="noopener noreferrer" target="_blank" class="comment-telegram-cta">
+      {labels.cta}
+    </a>
+  </p>
+</section>
+
+<script define:vars={{ labels }}>
+  import {
+    buildCommentTree,
+    fetchComments,
+    fetchEngagement,
+    formatCommentDate,
+  } from '../lib/blogEngagement.client';
+
+  const DEFAULT_AVATAR = '/brand/ojekku-logo.svg';
+
+  function initCommentSection(root) {
+    const rawMessageId = root.dataset.channelMessageId;
+    const channelMessageId = rawMessageId ? Number(rawMessageId) : NaN;
+    const lang = root.dataset.lang || 'id';
+    if (!Number.isInteger(channelMessageId) || channelMessageId <= 0) return;
+
+    const statusEl = root.querySelector('[data-comment-status]');
+    const listEl = root.querySelector('[data-comment-list]');
+    const emptyEl = root.querySelector('[data-comment-empty]');
+    const errorEl = root.querySelector('[data-comment-error]');
+    const reactionsEl = root.querySelector('[data-comment-reactions]');
+
+    const setVisible = (el, visible) => {
+      if (!el) return;
+      el.hidden = !visible;
+    };
+
+    const renderReactions = (reactions) => {
+      if (!reactionsEl) return;
+      reactionsEl.innerHTML = '';
+      if (!reactions || reactions.length === 0) {
+        setVisible(reactionsEl, false);
+        return;
+      }
+      for (const reaction of reactions) {
+        const chip = document.createElement('span');
+        chip.className = 'comment-reaction-chip';
+        chip.textContent = `${reaction.emoji} ${reaction.count}`;
+        reactionsEl.appendChild(chip);
+      }
+      setVisible(reactionsEl, true);
+    };
+
+    const renderCommentNode = (node, depth) => {
+      const li = document.createElement('li');
+      li.className = 'comment-item';
+      li.dataset.commentId = node.id;
+      const visualDepth = Math.min(depth, 4);
+      li.style.setProperty('--comment-depth', String(visualDepth));
+
+      const name = node.authorDisplayName || node.authorUsername || 'Telegram';
+      const avatar = node.authorAvatarUrl || DEFAULT_AVATAR;
+      li.innerHTML = `
+        <img src="${avatar}" alt="${name}" width="32" height="32" loading="lazy" />
+        <div class="comment-item__content">
+          <p class="comment-item__meta"><strong>${name}</strong> · <time datetime="${node.createdAt}">${formatCommentDate(node.createdAt, lang)}</time></p>
+          <p class="comment-item__body"></p>
+        </div>
+      `;
+      li.querySelector('.comment-item__body').textContent = node.body;
+
+      if (node.children.length > 0) {
+        const childList = document.createElement('ul');
+        childList.className = 'comment-list comment-list--nested';
+        for (const child of node.children) {
+          childList.appendChild(renderCommentNode(child, depth + 1));
+        }
+        li.querySelector('.comment-item__content')?.appendChild(childList);
+      }
+
+      return li;
+    };
+
+    const renderComments = (items) => {
+      if (!listEl) return;
+      listEl.innerHTML = '';
+      const tree = buildCommentTree(items);
+      for (const node of tree) {
+        listEl.appendChild(renderCommentNode(node, 0));
+      }
+    };
+
+    const loadEngagement = async () => {
+      const data = await fetchEngagement(channelMessageId);
+      if (data?.telegramReactions) {
+        renderReactions(data.telegramReactions);
+      }
+    };
+
+    const loadComments = async () => {
+      setVisible(statusEl, true);
+      setVisible(errorEl, false);
+      setVisible(emptyEl, false);
+      const data = await fetchComments(channelMessageId);
+      setVisible(statusEl, false);
+      if (!data) {
+        setVisible(errorEl, true);
+        return;
+      }
+      renderComments(data.items);
+      setVisible(emptyEl, data.items.length === 0);
+    };
+
+    void loadEngagement();
+    void loadComments();
+  }
+
+  function initAll() {
+    document.querySelectorAll('[data-comment-section]').forEach(initCommentSection);
+  }
+
+  initAll();
+  document.addEventListener('astro:page-load', initAll);
+</script>
+
+<style>
+  .comment-section {
+    margin: 2.5rem 0 0;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color, #e5e5e5);
+  }
+
+  .comment-section h2 {
+    font-size: 1.25rem;
+    margin: 0 0 0.5rem;
+  }
+
+  .comment-section__hint {
+    margin: 0 0 1rem;
+    font-size: 0.9rem;
+    color: var(--text-muted, #666);
+  }
+
+  .comment-reactions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .comment-reaction-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    border: 1px solid var(--border-color, #ddd);
+    background: var(--surface, #fff);
+    font-size: 0.9rem;
+  }
+
+  .comment-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.5rem;
+    display: grid;
+    gap: 1rem;
+  }
+
+  .comment-list--nested {
+    margin: 0.75rem 0 0;
+    padding-left: calc(var(--comment-depth, 1) * 1rem);
+    border-left: 2px solid var(--border-color, #e5e5e5);
+  }
+
+  .comment-item {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+  }
+
+  .comment-item img {
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .comment-item__content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .comment-item__meta {
+    margin: 0 0 0.25rem;
+    font-size: 0.9rem;
+    color: var(--text-muted, #666);
+  }
+
+  .comment-item__body {
+    margin: 0;
+    white-space: pre-wrap;
+  }
+
+  .comment-section__cta {
+    margin: 0;
+  }
+
+  .comment-telegram-cta {
+    display: inline-block;
+    font: inherit;
+    font-weight: 600;
+    padding: 0.6rem 1.1rem;
+    border-radius: 4px;
+    border: 1px solid var(--border-color, #ccc);
+    background: var(--surface, #fff);
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .comment-telegram-cta:hover {
+    text-decoration: none;
+    border-color: var(--text-muted, #999);
+  }
+
+  .comment-section__status,
+  .comment-section__empty,
+  .comment-section__error {
+    color: var(--text-muted, #666);
+    font-size: 0.95rem;
+  }
+
+  .comment-section__error {
+    color: #b00020;
+  }
+</style>

@@ -9,6 +9,8 @@
     "preview": "astro preview",
     "astro": "astro",
     "new-post": "tsx scripts/new-post.ts",
+    "author-sync": "tsx scripts/sync-authors.ts",
+    "tg-sync": "tsx scripts/tg-sync.ts",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",

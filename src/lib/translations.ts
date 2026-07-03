@@ -5,8 +5,8 @@
 export type Locale = "en" | "id";
 
 const blogTranslations = {
-  siteTitle: { en: "Ojekku Blog", id: "Blog Ojekku" },
-  headerTitle: { en: "Blog", id: "Blog" },
+  siteTitle: { en: "Ojekku Behind the Scenes", id: "Cerita Dapur Ojekku" },
+  headerTitle: { en: "Ojekku Behind the Scenes", id: "Cerita Dapur Ojekku" },
   pageTitle: {
     en: (page: number) => `Ojekku Blog — Page ${page}`,
     id: (page: number) => `Blog Ojekku — Halaman ${page}`,
@@ -23,6 +23,11 @@ const translations = {
   themeSwitchLabel: { en: "Display theme", id: "Tema tampilan" },
   themeDark: { en: "Dark", id: "Gelap" },
   themeLight: { en: "Light", id: "Terang" },
+  fontSizeSwitchLabel: { en: "Text size", id: "Ukuran teks" },
+  fontSizeDecrease: { en: "Decrease text size", id: "Perkecil teks" },
+  fontSizeIncrease: { en: "Increase text size", id: "Perbesar teks" },
+  menuLabel: { en: "Menu", id: "Menu" },
+  menuCloseLabel: { en: "Close menu", id: "Tutup menu" },
   searchLabel: { en: "Search", id: "Cari" },
   searchPlaceholder: { en: "Search posts…", id: "Cari artikel…" },
   searchButton: { en: "Search", id: "Cari" },
@@ -45,6 +50,7 @@ const translations = {
   },
   minReadOne: { en: "1 min read", id: "1 menit baca" },
   minRead: { en: "min read", id: "menit baca" },
+  telegramDiscussion: { en: "Discuss on Telegram", id: "Diskusi di Telegram" },
 } as const;
 
 type StringKey = Exclude<keyof typeof translations, "pageOf">;
