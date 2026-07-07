@@ -67,7 +67,7 @@ Konfigurasi ada di [`netlify.toml`](netlify.toml). Push ke `main` memicu deploy 
 
 Lihat [`.env.example`](.env.example):
 
-- `PUBLIC_BLOG_API_BASE` — engagement API + author byline hydration (`/api/v1/user-snapshots/{authorId}`)
+- `PUBLIC_BLOG_API_BASE` — engagement API (Telegram comments/reactions mirror)
 - `PUBLIC_BLOG_SITE_ID` — `ojekku-blog`
 
 URL lama (`/blog/...`, `/about`) di-redirect ke locale Indonesia (`/id/blog`).

@@ -1,20 +1,31 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
+  buildCommenterAvatarUrl,
+  buildCommenterInitials,
   buildCommentTree,
   buildLoginUrl,
+  fetchBulkEngagement,
   formatCommentCountLabel,
   formatDeletedCommentLabel,
   formatDetailedPostEngagement,
   formatPostListEngagement,
   formatReactionCountLabel,
   formatReplyCountLabel,
+  MAX_BULK_ENGAGEMENT_IDS,
   renderDetailedPostEngagement,
   renderPostListEngagement,
   renderReactionChip,
+  renderTelegramReactionChips,
+  resolveCommentAvatarUrl,
   sumReactionCounts,
 } from "./blogEngagement.client";
 
 describe("blogEngagement.client", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+  });
+
   it("buildLoginUrl returns null when API base unset", () => {
     expect(buildLoginUrl("http://localhost:4321/id/blog/foo")).toBeNull();
   });
@@ -256,9 +267,9 @@ describe("blogEngagement.client", () => {
     const el = document.createElement("div");
     renderReactionChip(el, "👍", 3, "#comments");
 
-    const chip = el.querySelector(".comment-reaction-chip");
+    const chip = el.querySelector(".engagement-pill");
     expect(chip?.tagName).toBe("A");
-    expect(chip?.classList.contains("comment-reaction-chip--link")).toBe(true);
+    expect(chip?.classList.contains("engagement-pill--link")).toBe(true);
     expect((chip as HTMLAnchorElement).getAttribute("href")).toBe("#comments");
   });
 
@@ -266,9 +277,47 @@ describe("blogEngagement.client", () => {
     const el = document.createElement("div");
     renderReactionChip(el, "🔥", 1);
 
-    const chip = el.querySelector(".comment-reaction-chip");
+    const chip = el.querySelector(".engagement-pill");
     expect(chip?.tagName).toBe("SPAN");
-    expect(chip?.classList.contains("comment-reaction-chip--link")).toBe(false);
+    expect(chip?.classList.contains("engagement-pill--link")).toBe(false);
+  });
+
+  it("renderTelegramReactionChips shows heart zero pill for empty or undefined reactions", () => {
+    for (const reactions of [undefined, []] as const) {
+      const el = document.createElement("div");
+      renderTelegramReactionChips(el, reactions);
+
+      const chips = el.querySelectorAll(".engagement-pill");
+      expect(chips).toHaveLength(1);
+      expect(chips[0]?.querySelector(".engagement-emoji")?.textContent).toBe("❤️");
+      expect(chips[0]?.textContent).toContain("0");
+      expect(chips[0]?.textContent).not.toContain("reaksi");
+    }
+  });
+
+  it("renderTelegramReactionChips renders one condensed pill for multiple reactions", () => {
+    const el = document.createElement("div");
+    renderTelegramReactionChips(el, [
+      { emoji: "👍", count: 2 },
+      { emoji: "🔥", count: 3 },
+    ]);
+
+    const chips = el.querySelectorAll(".engagement-pill");
+    expect(chips).toHaveLength(1);
+    expect(el.querySelector(".engagement-emoji-group")).not.toBeNull();
+    expect(chips[0]?.textContent).toContain("5");
+    expect(chips[0]?.textContent).not.toContain("reaksi");
+  });
+
+  it("renderTelegramReactionChips falls back to heart zero when all counts are zero", () => {
+    const el = document.createElement("div");
+    renderTelegramReactionChips(el, [{ emoji: "👍", count: 0 }]);
+
+    const chips = el.querySelectorAll(".engagement-pill");
+    expect(chips).toHaveLength(1);
+    expect(chips[0]?.querySelector(".engagement-emoji")?.textContent).toBe("❤️");
+    expect(chips[0]?.textContent).toContain("0");
+    expect(chips[0]?.textContent).not.toContain("reaksi");
   });
 
   it("renderDetailedPostEngagement renders labeled pills as spans", () => {
@@ -351,5 +400,135 @@ describe("blogEngagement.client", () => {
     const items = el.querySelectorAll(".engagement-emoji-group__item");
     expect(items).toHaveLength(3);
     expect(el.querySelector(".engagement-pill")?.textContent).toContain("14 reactions");
+  });
+
+  it("buildCommenterInitials derives initials from display name and username", () => {
+    expect(buildCommenterInitials("Andri YS", null)).toBe("AY");
+    expect(buildCommenterInitials(null, "driver_one")).toBe("DO");
+    expect(buildCommenterInitials("Tester", null)).toBe("TE");
+    expect(buildCommenterInitials("", "")).toBe("U");
+  });
+
+  it("buildCommenterAvatarUrl returns ui-avatars URL with encoded initials", () => {
+    const url = buildCommenterAvatarUrl("Andri YS", null);
+    expect(url).toContain("https://ui-avatars.com/api/");
+    expect(url).toContain("name=AY");
+    expect(url).toContain("background=0D8ABC");
+    expect(url).toContain("rounded=true");
+    expect(url).toContain("size=64");
+  });
+
+  it("resolveCommentAvatarUrl prefers authorAvatarUrl when present", () => {
+    expect(
+      resolveCommentAvatarUrl({
+        authorAvatarUrl: "https://cdn.example/avatar.png",
+        authorDisplayName: "Andri YS",
+        authorUsername: "andri",
+      }),
+    ).toBe("https://cdn.example/avatar.png");
+
+    expect(
+      resolveCommentAvatarUrl({
+        authorAvatarUrl: null,
+        authorDisplayName: "Tester",
+        authorUsername: null,
+      }),
+    ).toContain("name=TE");
+  });
+
+  it("fetchBulkEngagement returns null when API is not configured", async () => {
+    vi.stubEnv("PUBLIC_BLOG_API_BASE", "");
+    vi.stubEnv("PUBLIC_BLOG_SITE_ID", "");
+
+    await expect(fetchBulkEngagement([26])).resolves.toBeNull();
+  });
+
+  it("fetchBulkEngagement returns null for empty or invalid ids", async () => {
+    vi.stubEnv("PUBLIC_BLOG_API_BASE", "https://api.example.com");
+    vi.stubEnv("PUBLIC_BLOG_SITE_ID", "ojekku-blog");
+
+    await expect(fetchBulkEngagement([])).resolves.toBeNull();
+    await expect(fetchBulkEngagement([0, -1])).resolves.toBeNull();
+  });
+
+  it("fetchBulkEngagement posts channelMessageIds and returns items", async () => {
+    vi.stubEnv("PUBLIC_BLOG_API_BASE", "https://api.example.com");
+    vi.stubEnv("PUBLIC_BLOG_SITE_ID", "ojekku-blog");
+
+    const items = [
+      {
+        channelMessageId: 26,
+        commentCount: 0,
+        likeCount: 0,
+        shareCount: 0,
+        telegramReactions: [{ emoji: "👍", count: 2 }],
+        telegramCommentCount: 1,
+      },
+      {
+        channelMessageId: 27,
+        commentCount: 0,
+        likeCount: 0,
+        shareCount: 0,
+        telegramReactions: [],
+        telegramCommentCount: 0,
+      },
+    ];
+
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ items }),
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(fetchBulkEngagement([26, 27])).resolves.toEqual(items);
+    expect(fetchMock).toHaveBeenCalledOnce();
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://api.example.com/api/v1/sites/ojekku-blog/telegram/messages/engagement",
+      {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ channelMessageIds: [26, 27] }),
+      },
+    );
+  });
+
+  it("fetchBulkEngagement returns null when response is not ok", async () => {
+    vi.stubEnv("PUBLIC_BLOG_API_BASE", "https://api.example.com");
+    vi.stubEnv("PUBLIC_BLOG_SITE_ID", "ojekku-blog");
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue({ ok: false }));
+
+    await expect(fetchBulkEngagement([26])).resolves.toBeNull();
+  });
+
+  it("fetchBulkEngagement chunks requests above MAX_BULK_ENGAGEMENT_IDS", async () => {
+    vi.stubEnv("PUBLIC_BLOG_API_BASE", "https://api.example.com");
+    vi.stubEnv("PUBLIC_BLOG_SITE_ID", "ojekku-blog");
+
+    const fetchMock = vi.fn().mockImplementation(async (_url: string, init?: RequestInit) => {
+      const body = JSON.parse(String(init?.body)) as { channelMessageIds: number[] };
+      return {
+        ok: true,
+        json: async () => ({
+          items: body.channelMessageIds.map((channelMessageId) => ({
+            channelMessageId,
+            commentCount: 0,
+            likeCount: 0,
+            shareCount: 0,
+            telegramReactions: [],
+            telegramCommentCount: 0,
+          })),
+        }),
+      };
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    const ids = Array.from({ length: MAX_BULK_ENGAGEMENT_IDS + 1 }, (_, index) => index + 1);
+    const result = await fetchBulkEngagement(ids);
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(result).toHaveLength(MAX_BULK_ENGAGEMENT_IDS + 1);
   });
 });

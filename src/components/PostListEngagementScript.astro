@@ -1,11 +1,17 @@
 <script>
   import {
-    fetchEngagement,
+    fetchBulkEngagement,
     formatPostListEngagement,
     renderDetailedPostEngagement,
     renderPostListEngagement,
   } from '../lib/blogEngagement.client';
   import type { EngagementResponse } from '../lib/blogEngagement.client';
+
+  function markEngagementLoaded(el: HTMLElement) {
+    el.hidden = false;
+    el.dataset.loaded = 'true';
+    delete el.dataset.loading;
+  }
 
   function renderZeroState(el: HTMLElement) {
     const commentHref = el.dataset.commentHref?.trim() || undefined;
@@ -34,25 +40,13 @@
     );
   }
 
-  async function loadEngagement(el: HTMLElement) {
-    const rawId = el.dataset.channelMessageId;
+  function applyEngagement(el: HTMLElement, data: EngagementResponse | null) {
     const lang = el.dataset.lang === 'en' ? 'en' : 'id';
     const detailed = el.dataset.detailed === 'true';
-    const id = rawId ? Number(rawId) : NaN;
-    if (!Number.isInteger(id) || id <= 0) {
-      renderZeroState(el);
-      el.hidden = false;
-      el.dataset.loaded = 'true';
-      delete el.dataset.loading;
-      return;
-    }
 
-    const data = await fetchEngagement(id);
     if (!data) {
       renderZeroState(el);
-      el.hidden = false;
-      el.dataset.loaded = 'true';
-      delete el.dataset.loading;
+      markEngagementLoaded(el);
       return;
     }
 
@@ -65,9 +59,13 @@
       renderPostListEngagement(el, display, { commentHref });
     }
 
-    el.hidden = false;
-    el.dataset.loaded = 'true';
-    delete el.dataset.loading;
+    markEngagementLoaded(el);
+  }
+
+  function parseChannelMessageId(el: HTMLElement): number {
+    const rawId = el.dataset.channelMessageId;
+    const id = rawId ? Number(rawId) : NaN;
+    return Number.isInteger(id) && id > 0 ? id : NaN;
   }
 
   function scrollToComments(href: string) {
@@ -92,7 +90,7 @@
       if (!(target instanceof Element)) return;
 
       const anchor = target.closest<HTMLAnchorElement>(
-        '[data-post-engagement] a.engagement-pill--link, [data-post-engagement] a.comment-reaction-chip--link',
+        '[data-post-engagement] a.engagement-pill--link',
       );
       if (!anchor) return;
 
@@ -104,20 +102,57 @@
     });
   }
 
-  function initPostListEngagements() {
+  async function initPostListEngagements() {
     const pending = [...document.querySelectorAll<HTMLElement>('[data-post-engagement]')].filter(
       (el) => !el.dataset.loaded,
     );
-    void Promise.all(pending.map((el) => loadEngagement(el)));
+    if (pending.length === 0) return;
+
+    const validElements: HTMLElement[] = [];
+    const ids: number[] = [];
+    const seenIds = new Set<number>();
+
+    for (const el of pending) {
+      const id = parseChannelMessageId(el);
+      if (!Number.isInteger(id)) {
+        renderZeroState(el);
+        markEngagementLoaded(el);
+        continue;
+      }
+
+      validElements.push(el);
+      if (!seenIds.has(id)) {
+        seenIds.add(id);
+        ids.push(id);
+      }
+    }
+
+    const engagementById = new Map<number, EngagementResponse>();
+    if (ids.length > 0) {
+      const items = await fetchBulkEngagement(ids);
+      if (items) {
+        for (const item of items) {
+          const { channelMessageId, ...engagement } = item;
+          engagementById.set(channelMessageId, engagement);
+        }
+      }
+    }
+
+    for (const el of validElements) {
+      const id = parseChannelMessageId(el);
+      applyEngagement(el, engagementById.get(id) ?? null);
+    }
   }
 
   initEngagementScrollLinks();
 
   if (!window.__ojekkuPostListEngagementInit) {
     window.__ojekkuPostListEngagementInit = true;
-    initPostListEngagements();
-    document.addEventListener('astro:page-load', initPostListEngagements);
+    void initPostListEngagements();
+    document.addEventListener('astro:page-load', () => {
+      void initPostListEngagements();
+    });
   } else {
-    initPostListEngagements();
+    void initPostListEngagements();
   }
 </script>

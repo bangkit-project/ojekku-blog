@@ -1,5 +1,6 @@
 ---
 import type { Locale } from '../lib/translations';
+import CommenterAvatar from './CommenterAvatar.astro';
 
 interface Props {
   channelMessageId: number;
@@ -11,16 +12,12 @@ const { channelMessageId, lang, telegramUrl } = Astro.props;
 
 const labels = {
   title: lang === 'id' ? 'Komentar' : 'Comments',
-  cta: lang === 'id' ? 'Komentar di Telegram' : 'Comment on Telegram',
-  ctaHint:
-    lang === 'id'
-      ? 'Komentar dan reaksi disinkronkan dari channel Telegram.'
-      : 'Comments and reactions are synced from the Telegram channel.',
+  cta: lang === 'id' ? 'Kirim Komentar' : 'Send comment',
   loading: lang === 'id' ? 'Memuat komentar…' : 'Loading comments…',
   loadingReplies: lang === 'id' ? 'Memuat balasan…' : 'Loading replies…',
   empty: lang === 'id' ? 'Belum ada komentar.' : 'No comments yet.',
   error: lang === 'id' ? 'Gagal memuat komentar.' : 'Failed to load comments.',
-  loadMore: lang === 'id' ? 'Muat komentar lain' : 'Load more comments',
+  loadMore: lang === 'id' ? 'Lihat komentar lain' : 'Load more comments',
   hideReplies: lang === 'id' ? 'Sembunyikan balasan' : 'Hide replies',
 };
 ---
@@ -33,14 +30,12 @@ const labels = {
   data-lang={lang}
   data-telegram-url={telegramUrl}
 >
-  <h2>{labels.title}</h2>
-  <p class="comment-section__hint">{labels.ctaHint}</p>
-
-  <div class="comment-reactions" data-comment-reactions hidden></div>
+  <p class="post-list-meta post-list-engagement comment-reactions" data-comment-reactions hidden></p>
+  <h2 class="comment-section__title" data-comment-heading>{labels.title}</h2>
 
   <p class="comment-section__status" data-comment-status hidden>{labels.loading}</p>
   <ul class="comment-list" data-comment-list></ul>
-  <button type="button" class="comment-section__load-more" data-comment-load-more hidden>
+  <button type="button" class="comment-section__load-more comment-flat-button" data-comment-load-more hidden>
     {labels.loadMore}
   </button>
   <p class="comment-section__empty" data-comment-empty hidden>{labels.empty}</p>
@@ -51,21 +46,23 @@ const labels = {
       {labels.cta}
     </a>
   </p>
+  <CommenterAvatar />
 </section>
 
 <script>
+  import { COMMENT_AVATAR_SIZE } from '../lib/avatarImage';
   import {
     fetchCommentReplies,
     fetchComments,
     fetchEngagement,
+    formatCommentCountLabel,
     formatCommentDate,
     formatDeletedCommentLabel,
     formatReplyCountLabel,
-    renderReactionChip,
+    renderTelegramReactionChips,
+    resolveCommentAvatarUrl,
   } from '../lib/blogEngagement.client';
-  import type { BlogComment, TelegramReaction } from '../lib/blogEngagement.client';
-
-  const DEFAULT_AVATAR = '/brand/ojekku-logo.svg';
+  import type { BlogComment } from '../lib/blogEngagement.client';
 
   function initCommentSection(root: HTMLElement) {
     const rawMessageId = root.dataset.channelMessageId;
@@ -79,10 +76,10 @@ const labels = {
     const emptyEl = root.querySelector<HTMLElement>('[data-comment-empty]');
     const errorEl = root.querySelector<HTMLElement>('[data-comment-error]');
     const reactionsEl = root.querySelector<HTMLElement>('[data-comment-reactions]');
+    const headingEl = root.querySelector<HTMLElement>('[data-comment-heading]');
 
     let currentPage = 1;
     let totalRoots = 0;
-    const pageSize = 20;
 
     const labels = {
       loadingReplies: lang === 'id' ? 'Memuat balasan…' : 'Loading replies…',
@@ -94,17 +91,9 @@ const labels = {
       el.hidden = !visible;
     };
 
-    const renderReactions = (reactions: TelegramReaction[] | undefined) => {
-      if (!reactionsEl) return;
-      reactionsEl.innerHTML = '';
-      if (!reactions || reactions.length === 0) {
-        setVisible(reactionsEl, false);
-        return;
-      }
-      for (const reaction of reactions) {
-        renderReactionChip(reactionsEl, reaction.emoji, reaction.count);
-      }
-      setVisible(reactionsEl, true);
+    const updateHeading = (count: number) => {
+      if (!headingEl) return;
+      headingEl.textContent = formatCommentCountLabel(count, lang === 'en' ? 'en' : 'id');
     };
 
     const createReplyToggle = (
@@ -116,7 +105,7 @@ const labels = {
 
       const button = document.createElement('button');
       button.type = 'button';
-      button.className = 'comment-item__replies-toggle';
+      button.className = 'comment-flat-button comment-item__replies-toggle';
       button.textContent = formatReplyCountLabel(replyCount, lang);
       button.dataset.expanded = 'false';
 
@@ -158,15 +147,25 @@ const labels = {
       li.style.setProperty('--comment-depth', String(visualDepth));
 
       const name = comment.authorDisplayName || comment.authorUsername || 'Telegram';
-      const avatar = comment.authorAvatarUrl || DEFAULT_AVATAR;
+      const avatar = resolveCommentAvatarUrl(comment);
       li.innerHTML = `
-        <img src="${avatar}" alt="${name}" width="32" height="32" loading="lazy" />
-        <div class="comment-item__content">
-          <p class="comment-item__meta"><strong>${name}</strong> · <time datetime="${comment.createdAt}">${formatCommentDate(comment.createdAt, lang)}</time></p>
+        <div class="comment-item__header">
+          <strong class="comment-item__author">${name}</strong>
+          <span class="comment-item__separator" aria-hidden="true">·</span>
+          <time datetime="${comment.createdAt}">${formatCommentDate(comment.createdAt, lang)}</time>
+        </div>
+        <div class="comment-item__main">
           <p class="comment-item__body"></p>
         </div>
       `;
-      const contentEl = li.querySelector<HTMLElement>('.comment-item__content');
+      const avatarEl = document.createElement('commenter-avatar');
+      avatarEl.setAttribute('src', avatar);
+      avatarEl.setAttribute('alt', name);
+      avatarEl.setAttribute('width', String(COMMENT_AVATAR_SIZE));
+      avatarEl.setAttribute('height', String(COMMENT_AVATAR_SIZE));
+      avatarEl.setAttribute('class', 'comment-item__avatar');
+      li.insertBefore(avatarEl, li.firstChild);
+      const mainEl = li.querySelector<HTMLElement>('.comment-item__main');
       const bodyEl = li.querySelector<HTMLElement>('.comment-item__body');
       if (bodyEl) {
         bodyEl.textContent = isDeleted ? formatDeletedCommentLabel(lang) : comment.body;
@@ -199,9 +198,9 @@ const labels = {
         return true;
       });
 
-      if (toggle && contentEl) {
-        contentEl.appendChild(toggle);
-        contentEl.appendChild(repliesContainer);
+      if (toggle && mainEl) {
+        mainEl.appendChild(toggle);
+        mainEl.appendChild(repliesContainer);
       }
 
       return li;
@@ -216,16 +215,20 @@ const labels = {
     };
 
     const updateLoadMore = () => {
-      if (!loadMoreEl) return;
-      const hasMore = currentPage * pageSize < totalRoots;
+      if (!loadMoreEl || !listEl) return;
+      const loaded = listEl.children.length;
+      const hasMore = loaded > 0 && loaded < totalRoots;
       setVisible(loadMoreEl, hasMore);
     };
 
     const loadEngagement = async () => {
       const data = await fetchEngagement(channelMessageId);
-      if (data?.telegramReactions) {
-        renderReactions(data.telegramReactions);
+      if (data && reactionsEl) {
+        renderTelegramReactionChips(reactionsEl, data.telegramReactions);
+        setVisible(reactionsEl, true);
       }
+      const count = data?.telegramCommentCount ?? data?.commentCount ?? 0;
+      updateHeading(count);
     };
 
     const loadComments = async (page = 1, append = false) => {
@@ -238,6 +241,12 @@ const labels = {
       if (page === 1) setVisible(statusEl, false);
       if (!data) {
         if (page === 1) setVisible(errorEl, true);
+        if (page > 1) setVisible(loadMoreEl, false);
+        return;
+      }
+
+      if (append && data.items.length === 0) {
+        setVisible(loadMoreEl, false);
         return;
       }
 
@@ -271,22 +280,13 @@ const labels = {
     border-top: 1px solid var(--border-color, #e5e5e5);
   }
 
-  .comment-section h2 {
+  .comment-section__title {
     font-size: 1.25rem;
-    margin: 0 0 0.5rem;
-  }
-
-  .comment-section__hint {
     margin: 0 0 1rem;
-    font-size: 0.9rem;
-    color: var(--text-muted, #666);
   }
 
   .comment-reactions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
+    margin-bottom: 1.5rem;
   }
 
   .comment-list {
@@ -303,80 +303,13 @@ const labels = {
     border-left: 2px solid var(--border-color, #e5e5e5);
   }
 
-  .comment-item {
-    display: flex;
-    gap: 0.75rem;
-    align-items: flex-start;
-  }
-
-  .comment-item img {
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-
-  .comment-item__content {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .comment-item__meta {
-    margin: 0 0 0.25rem;
-    font-size: 0.9rem;
-    color: var(--text-muted, #666);
-  }
-
-  .comment-item__body {
-    margin: 0;
-    white-space: pre-wrap;
-  }
-
-  .comment-item--deleted .comment-item__meta,
-  .comment-item--deleted img {
-    opacity: 0.65;
-  }
-
-  .comment-item--deleted .comment-item__body {
-    font-style: italic;
-    color: var(--text-muted, #666);
-  }
-
-  .comment-item__replies-toggle {
-    display: inline-block;
-    margin-top: 0.5rem;
-    padding: 0;
-    border: 0;
-    background: none;
-    color: var(--accent, #0b57d0);
-    font: inherit;
-    font-size: 0.875rem;
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  .comment-item__replies-toggle:hover {
-    text-decoration: underline;
-  }
-
-  .comment-item__replies-toggle:disabled {
-    opacity: 0.7;
-    cursor: wait;
+  .comment-section__load-more[hidden] {
+    display: none;
   }
 
   .comment-section__load-more {
-    display: block;
+    display: inline-block;
     margin: 0 0 1.5rem;
-    padding: 0.5rem 1rem;
-    border-radius: 4px;
-    border: 1px solid var(--border-color, #ccc);
-    background: var(--surface, #fff);
-    color: inherit;
-    font: inherit;
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  .comment-section__load-more:hover {
-    border-color: var(--text-muted, #999);
   }
 
   .comment-section__cta {
@@ -389,15 +322,15 @@ const labels = {
     font-weight: 600;
     padding: 0.6rem 1.1rem;
     border-radius: 4px;
-    border: 1px solid var(--border-color, #ccc);
-    background: var(--surface, #fff);
-    color: inherit;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text);
     text-decoration: none;
   }
 
   .comment-telegram-cta:hover {
     text-decoration: none;
-    border-color: var(--text-muted, #999);
+    border-color: var(--color-muted);
   }
 
   .comment-section__status,

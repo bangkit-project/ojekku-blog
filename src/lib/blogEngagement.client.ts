@@ -39,6 +39,16 @@ export interface EngagementResponse {
   telegramCommentCount?: number;
 }
 
+export interface BulkEngagementItem extends EngagementResponse {
+  channelMessageId: number;
+}
+
+export interface BulkEngagementResponse {
+  items: BulkEngagementItem[];
+}
+
+export const MAX_BULK_ENGAGEMENT_IDS = 50;
+
 const TOKEN_KEY = "ojekku_blog_access_token";
 
 export function blogApiBase(): string | undefined {
@@ -94,11 +104,17 @@ function sitePostPath(postId: string): string | null {
   return `${base}/api/v1/sites/${encodeURIComponent(siteId)}/posts/${encodeURIComponent(postId)}`;
 }
 
-function telegramMessagePath(channelMessageId: number): string | null {
+function telegramMessagesPath(): string | null {
   const base = blogApiBase();
   const siteId = blogSiteId();
   if (!base || !siteId) return null;
-  return `${base}/api/v1/sites/${encodeURIComponent(siteId)}/telegram/messages/${channelMessageId}`;
+  return `${base}/api/v1/sites/${encodeURIComponent(siteId)}/telegram/messages`;
+}
+
+function telegramMessagePath(channelMessageId: number): string | null {
+  const path = telegramMessagesPath();
+  if (!path) return null;
+  return `${path}/${channelMessageId}`;
 }
 
 export async function fetchComments(channelMessageId: number, page = 1): Promise<CommentListResponse | null> {
@@ -143,6 +159,53 @@ export function formatDeletedCommentLabel(lang: string): string {
   return lang === "en" ? "Comment deleted" : "Komentar dihapus";
 }
 
+const COMMENTER_AVATAR_BACKGROUND = "0D8ABC";
+
+function initialsFromParts(parts: string[]): string {
+  const letters = parts
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase())
+    .filter(Boolean);
+  return letters.join("");
+}
+
+export function buildCommenterInitials(
+  displayName?: string | null,
+  username?: string | null,
+): string {
+  const source = displayName?.trim() || username?.trim() || "";
+  if (!source) return "U";
+
+  const words = source.split(/\s+/).filter(Boolean);
+  if (words.length >= 2) {
+    return initialsFromParts(words) || "U";
+  }
+
+  const word = words[0] ?? source;
+  const separated = word.split(/[._-]+/g).filter(Boolean);
+  if (separated.length >= 2) {
+    return initialsFromParts(separated) || "U";
+  }
+
+  const compact = word.slice(0, 2).toUpperCase();
+  return compact || "U";
+}
+
+export function buildCommenterAvatarUrl(
+  displayName?: string | null,
+  username?: string | null,
+): string {
+  const initials = buildCommenterInitials(displayName, username);
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=${COMMENTER_AVATAR_BACKGROUND}&color=fff&rounded=true&size=64`;
+}
+
+export function resolveCommentAvatarUrl(comment: Pick<BlogComment, "authorAvatarUrl" | "authorDisplayName" | "authorUsername">): string {
+  const existing = comment.authorAvatarUrl?.trim();
+  if (existing) return existing;
+  return buildCommenterAvatarUrl(comment.authorDisplayName, comment.authorUsername);
+}
+
 export async function fetchEngagement(channelMessageId: number): Promise<EngagementResponse | null> {
   const path = telegramMessagePath(channelMessageId);
   if (!path) return null;
@@ -150,6 +213,60 @@ export async function fetchEngagement(channelMessageId: number): Promise<Engagem
     const res = await fetch(`${path}/engagement`, { headers: { Accept: "application/json" } });
     if (!res.ok) return null;
     return (await res.json()) as EngagementResponse;
+  } catch {
+    return null;
+  }
+}
+
+function normalizeChannelMessageIds(channelMessageIds: readonly number[]): number[] {
+  const seen = new Set<number>();
+  const normalized: number[] = [];
+  for (const id of channelMessageIds) {
+    if (!Number.isInteger(id) || id <= 0 || seen.has(id)) continue;
+    seen.add(id);
+    normalized.push(id);
+  }
+  return normalized;
+}
+
+function chunkChannelMessageIds(ids: readonly number[], chunkSize: number): number[][] {
+  const chunks: number[][] = [];
+  for (let i = 0; i < ids.length; i += chunkSize) {
+    chunks.push(ids.slice(i, i + chunkSize));
+  }
+  return chunks;
+}
+
+export async function fetchBulkEngagement(
+  channelMessageIds: readonly number[],
+): Promise<BulkEngagementItem[] | null> {
+  const path = telegramMessagesPath();
+  if (!path) return null;
+
+  const ids = normalizeChannelMessageIds(channelMessageIds);
+  if (ids.length === 0) return null;
+
+  const items: BulkEngagementItem[] = [];
+
+  try {
+    for (const chunk of chunkChannelMessageIds(ids, MAX_BULK_ENGAGEMENT_IDS)) {
+      const res = await fetch(`${path}/engagement`, {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ channelMessageIds: chunk }),
+      });
+      if (!res.ok) return null;
+
+      const data = (await res.json()) as BulkEngagementResponse;
+      if (data.items?.length) {
+        items.push(...data.items);
+      }
+    }
+
+    return items;
   } catch {
     return null;
   }
@@ -333,8 +450,39 @@ export function renderDetailedPostEngagement(
   el.replaceChildren();
 
   const display = formatDetailedPostEngagement(engagement, lang);
-  el.appendChild(makeEngagementPill(display.reactionEmojis, display.reactionLabel));
+  el.appendChild(buildReactionEngagementPill(engagement.telegramReactions, lang));
   el.appendChild(makeEngagementPill(["💬"], display.commentLabel));
+}
+
+function buildReactionEngagementPill(
+  reactions: TelegramReaction[] | undefined,
+  lang: "id" | "en",
+): HTMLElement {
+  const display = formatDetailedPostEngagement(
+    {
+      commentCount: 0,
+      likeCount: 0,
+      shareCount: 0,
+      telegramReactions: reactions ?? [],
+      telegramCommentCount: 0,
+    },
+    lang,
+  );
+  return makeEngagementPill(display.reactionEmojis, display.reactionLabel);
+}
+
+function buildCommentReactionPill(reactions: TelegramReaction[] | undefined): HTMLElement {
+  const display = formatDetailedPostEngagement(
+    {
+      commentCount: 0,
+      likeCount: 0,
+      shareCount: 0,
+      telegramReactions: reactions ?? [],
+      telegramCommentCount: 0,
+    },
+    "id",
+  );
+  return makeEngagementPill(display.reactionEmojis, String(sumReactionCounts(reactions)));
 }
 
 function appendEmojiToPill(pill: HTMLElement, emojis: string[]): void {
@@ -383,7 +531,7 @@ export function renderReactionChip(
   href?: string,
 ): void {
   const chip = document.createElement(href ? 'a' : 'span');
-  chip.className = href ? 'comment-reaction-chip comment-reaction-chip--link' : 'comment-reaction-chip';
+  chip.className = href ? 'engagement-pill engagement-pill--link' : 'engagement-pill';
   if (href) {
     (chip as HTMLAnchorElement).href = href;
   }
@@ -400,4 +548,12 @@ export function renderReactionChip(
   chip.appendChild(textSpan);
 
   parent.appendChild(chip);
+}
+
+export function renderTelegramReactionChips(
+  parent: HTMLElement,
+  reactions?: TelegramReaction[],
+): void {
+  parent.replaceChildren();
+  parent.appendChild(buildCommentReactionPill(reactions));
 }

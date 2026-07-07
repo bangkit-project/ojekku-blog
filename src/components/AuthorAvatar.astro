@@ -1,5 +1,6 @@
 ---
 import { Image } from 'astro:assets';
+import { getAvatarLoadingAttrs } from '../lib/avatarImage';
 
 interface Props {
   src: string;
@@ -7,11 +8,11 @@ interface Props {
   width: number;
   height: number;
   eager?: boolean;
+  class?: string;
 }
 
-const { src, alt, width, height, eager = false } = Astro.props;
-const loading = eager ? "eager" : "lazy";
-const decoding = eager ? "sync" : "async";
+const { src, alt, width, height, eager = false, class: className } = Astro.props;
+const { loading, decoding } = getAvatarLoadingAttrs(eager);
 ---
 
 <Image
@@ -21,5 +22,5 @@ const decoding = eager ? "sync" : "async";
   height={height}
   loading={loading}
   decoding={decoding}
-  data-author-avatar
+  class={className}
 />

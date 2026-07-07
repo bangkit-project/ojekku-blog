@@ -60,7 +60,7 @@ function buildDefaultFallbackAuthor(id: string): AuthorFallback {
   return {
     id: safeId,
     name: safeId,
-    avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=0D8ABC&color=fff`,
+    avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=0D8ABC&color=fff&rounded=true&size=64`,
   };
 }
 

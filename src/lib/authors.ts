@@ -18,7 +18,7 @@ export const AUTHOR_REGISTRY: Record<string, Author> = {
   "andri.ys.st@gmail.com": {
     id: "andri.ys.st@gmail.com",
     name: "Andri YS",
-    avatarUrl: "https://ui-avatars.com/api/?name=AY&background=0D8ABC&color=fff",
+    avatarUrl: "https://ui-avatars.com/api/?name=AY&background=0D8ABC&color=fff&rounded=true&size=64",
   },
   // END GENERATED AUTHORS
 };
@@ -36,11 +36,11 @@ function buildDefaultFallbackAuthor(id: AuthorId): Author {
   return {
     id: safeId,
     name: safeId,
-    avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=0D8ABC&color=fff`,
+    avatarUrl: `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=0D8ABC&color=fff&rounded=true&size=64`,
   };
 }
 
-/** Static fallback author for SSR and when blog-api snapshot is unavailable. */
+/** Resolve author from the local manifest (registry or generated fallback). */
 export function getAuthor(id: AuthorId | undefined): Author | undefined {
   const trimmed = id?.trim();
   if (!trimmed) return undefined;
