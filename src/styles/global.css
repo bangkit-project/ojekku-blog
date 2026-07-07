@@ -432,6 +432,13 @@ td {
   background: color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
+.engagement-pill--interactive {
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  appearance: none;
+}
+
 .post-list-engagement {
   display: inline-flex;
   align-items: center;

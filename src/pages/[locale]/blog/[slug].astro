@@ -10,6 +10,7 @@ import { t, tBlogHeaderTitle } from '../../../lib/translations';
 import AuthorByline from '../../../components/AuthorByline.astro';
 import CommentSection from '../../../components/CommentSection.astro';
 import PostEngagementPills from '../../../components/PostEngagementPills.astro';
+import TelegramJoinDialog from '../../../components/TelegramJoinDialog.astro';
 import { getIdEquivalentPath, PUBLIC_LOCALES } from '../../../lib/locale-path';
 import type { Locale } from '../../../lib/translations';
 
@@ -125,6 +126,7 @@ const channelMessageId = data.telegramMessageIds?.[0];
           channelMessageId={channelMessageId}
           lang={lang}
           detailed
+          telegramUrl={data.telegramUrl}
         />
       )}
 
@@ -143,6 +145,8 @@ const channelMessageId = data.telegramMessageIds?.[0];
       )}
 
       <Content />
+
+      {data.telegramUrl && <TelegramJoinDialog lang={lang} />}
 
       {data.telegramUrl && data.telegramMessageIds?.[0] && (
         <CommentSection

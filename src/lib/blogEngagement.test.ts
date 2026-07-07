@@ -346,6 +346,38 @@ describe("blogEngagement.client", () => {
     expect(el.querySelector(".engagement-emoji-group")).not.toBeNull();
   });
 
+  it("renderDetailedPostEngagement renders interactive pills as buttons", () => {
+    const el = document.createElement("div");
+    renderDetailedPostEngagement(
+      el,
+      {
+        commentCount: 0,
+        likeCount: 0,
+        shareCount: 0,
+        telegramReactions: [{ emoji: "👍", count: 2 }],
+        telegramCommentCount: 5,
+      },
+      "id",
+      { interactive: true },
+    );
+
+    const pills = el.querySelectorAll(".engagement-pill");
+    expect(pills).toHaveLength(2);
+    expect(pills[0]?.tagName).toBe("BUTTON");
+    expect(pills[1]?.tagName).toBe("BUTTON");
+    expect(pills[0]?.classList.contains("engagement-pill--interactive")).toBe(true);
+    expect(pills[0]?.hasAttribute("data-telegram-join-trigger")).toBe(true);
+  });
+
+  it("renderTelegramReactionChips renders interactive pill when requested", () => {
+    const el = document.createElement("div");
+    renderTelegramReactionChips(el, [{ emoji: "👍", count: 1 }], { interactive: true });
+
+    const chip = el.querySelector(".engagement-pill");
+    expect(chip?.tagName).toBe("BUTTON");
+    expect(chip?.classList.contains("engagement-pill--interactive")).toBe(true);
+  });
+
   it("renderDetailedPostEngagement uses heart and single emoji for zero and one reaction", () => {
     const zeroEl = document.createElement("div");
     renderDetailedPostEngagement(

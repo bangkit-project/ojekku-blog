@@ -438,7 +438,7 @@ export function renderPostListEngagement(
     makeEngagementPill([display.reaction.emoji], String(display.reaction.total)),
   );
   el.appendChild(
-    makeEngagementPill(["💬"], String(display.comments.total), commentHref),
+    makeEngagementPill(["💬"], String(display.comments.total), { href: commentHref }),
   );
 }
 
@@ -446,17 +446,20 @@ export function renderDetailedPostEngagement(
   el: HTMLElement,
   engagement: EngagementResponse,
   lang: "id" | "en",
+  options?: { interactive?: boolean },
 ): void {
   el.replaceChildren();
 
   const display = formatDetailedPostEngagement(engagement, lang);
-  el.appendChild(buildReactionEngagementPill(engagement.telegramReactions, lang));
-  el.appendChild(makeEngagementPill(["💬"], display.commentLabel));
+  const pillOptions = options?.interactive ? { interactive: true as const } : undefined;
+  el.appendChild(buildReactionEngagementPill(engagement.telegramReactions, lang, pillOptions));
+  el.appendChild(makeEngagementPill(["💬"], display.commentLabel, pillOptions));
 }
 
 function buildReactionEngagementPill(
   reactions: TelegramReaction[] | undefined,
   lang: "id" | "en",
+  options?: { interactive?: boolean },
 ): HTMLElement {
   const display = formatDetailedPostEngagement(
     {
@@ -468,10 +471,13 @@ function buildReactionEngagementPill(
     },
     lang,
   );
-  return makeEngagementPill(display.reactionEmojis, display.reactionLabel);
+  return makeEngagementPill(display.reactionEmojis, display.reactionLabel, options);
 }
 
-function buildCommentReactionPill(reactions: TelegramReaction[] | undefined): HTMLElement {
+function buildCommentReactionPill(
+  reactions: TelegramReaction[] | undefined,
+  options?: { interactive?: boolean },
+): HTMLElement {
   const display = formatDetailedPostEngagement(
     {
       commentCount: 0,
@@ -482,7 +488,7 @@ function buildCommentReactionPill(reactions: TelegramReaction[] | undefined): HT
     },
     "id",
   );
-  return makeEngagementPill(display.reactionEmojis, String(sumReactionCounts(reactions)));
+  return makeEngagementPill(display.reactionEmojis, String(sumReactionCounts(reactions)), options);
 }
 
 function appendEmojiToPill(pill: HTMLElement, emojis: string[]): void {
@@ -507,11 +513,29 @@ function appendEmojiToPill(pill: HTMLElement, emojis: string[]): void {
   pill.appendChild(group);
 }
 
-function makeEngagementPill(emojis: string[], labelText: string, href?: string): HTMLElement {
-  const pill = document.createElement(href ? "a" : "span");
-  pill.className = href ? "engagement-pill engagement-pill--link" : "engagement-pill";
-  if (href) {
-    (pill as HTMLAnchorElement).href = href;
+function makeEngagementPill(
+  emojis: string[],
+  labelText: string,
+  options?: { href?: string; interactive?: boolean },
+): HTMLElement {
+  const href = options?.href?.trim() || undefined;
+  const interactive = options?.interactive === true;
+
+  let pill: HTMLElement;
+  if (interactive) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "engagement-pill engagement-pill--interactive";
+    button.setAttribute("data-telegram-join-trigger", "");
+    pill = button;
+  } else if (href) {
+    const anchor = document.createElement("a");
+    anchor.className = "engagement-pill engagement-pill--link";
+    anchor.href = href;
+    pill = anchor;
+  } else {
+    pill = document.createElement("span");
+    pill.className = "engagement-pill";
   }
 
   appendEmojiToPill(pill, emojis);
@@ -553,7 +577,8 @@ export function renderReactionChip(
 export function renderTelegramReactionChips(
   parent: HTMLElement,
   reactions?: TelegramReaction[],
+  options?: { interactive?: boolean },
 ): void {
   parent.replaceChildren();
-  parent.appendChild(buildCommentReactionPill(reactions));
+  parent.appendChild(buildCommentReactionPill(reactions, options));
 }

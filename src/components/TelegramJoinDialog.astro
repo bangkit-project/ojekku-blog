@@ -1,0 +1,77 @@
+---
+import type { Locale } from '../lib/translations';
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+
+const labels = {
+  joinMessage:
+    lang === 'id'
+      ? 'Ikuti kami di channel Telegram @ojekku_channel\nuntuk mengirim komentar atau reaksi.\n\nLanjutkan?'
+      : 'Follow us on Telegram channel @ojekku_channel\nto send a comment or reaction.\n\nContinue?',
+  joinOk: 'OK',
+  joinCancel: lang === 'id' ? 'Batal' : 'Cancel',
+};
+---
+
+<div class="telegram-join-dialog-root" data-telegram-join-dialog-root>
+  <dialog class="telegram-join-dialog" data-telegram-join-dialog>
+    <p class="telegram-join-dialog__message">{labels.joinMessage}</p>
+    <div class="telegram-join-dialog__actions">
+      <button type="button" class="comment-flat-button" data-telegram-join-cancel>
+        {labels.joinCancel}
+      </button>
+      <button type="button" class="comment-flat-button telegram-join-dialog__ok" data-telegram-join-ok>
+        {labels.joinOk}
+      </button>
+    </div>
+  </dialog>
+</div>
+
+<script>
+  import {
+    initAllTelegramJoinDialogs,
+    initTelegramJoinTriggers,
+  } from '../lib/telegramJoinDialog.client';
+
+  initTelegramJoinTriggers();
+  initAllTelegramJoinDialogs();
+  document.addEventListener('astro:page-load', initAllTelegramJoinDialogs);
+</script>
+
+<style>
+  .telegram-join-dialog {
+    max-width: 28rem;
+    width: calc(100% - 2rem);
+    margin: auto;
+    padding: 1.5rem;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: var(--color-surface);
+    color: var(--color-text);
+  }
+
+  .telegram-join-dialog::backdrop {
+    background: rgb(0 0 0 / 45%);
+  }
+
+  .telegram-join-dialog__message {
+    margin: 0 0 1.25rem;
+    font-size: 0.95rem;
+    line-height: 1.5;
+    white-space: pre-line;
+  }
+
+  .telegram-join-dialog__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+  }
+
+  .telegram-join-dialog__ok {
+    border-color: var(--color-muted);
+  }
+</style>

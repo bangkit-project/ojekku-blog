@@ -30,7 +30,7 @@ const labels = {
   data-lang={lang}
   data-telegram-url={telegramUrl}
 >
-  <p class="post-list-meta post-list-engagement comment-reactions" data-comment-reactions hidden></p>
+  <p class="post-list-meta post-list-engagement comment-reactions" data-comment-reactions data-telegram-url={telegramUrl} hidden></p>
   <h2 class="comment-section__title" data-comment-heading>{labels.title}</h2>
 
   <p class="comment-section__status" data-comment-status hidden>{labels.loading}</p>
@@ -42,10 +42,11 @@ const labels = {
   <p class="comment-section__error" data-comment-error hidden>{labels.error}</p>
 
   <p class="comment-section__cta">
-    <a href={telegramUrl} rel="noopener noreferrer" target="_blank" class="comment-telegram-cta">
+    <button type="button" class="comment-telegram-cta" data-telegram-join-trigger>
       {labels.cta}
-    </a>
+    </button>
   </p>
+
   <CommenterAvatar />
 </section>
 
@@ -224,7 +225,7 @@ const labels = {
     const loadEngagement = async () => {
       const data = await fetchEngagement(channelMessageId);
       if (data && reactionsEl) {
-        renderTelegramReactionChips(reactionsEl, data.telegramReactions);
+        renderTelegramReactionChips(reactionsEl, data.telegramReactions, { interactive: true });
         setVisible(reactionsEl, true);
       }
       const count = data?.telegramCommentCount ?? data?.commentCount ?? 0;
@@ -326,6 +327,8 @@ const labels = {
     background: var(--color-surface);
     color: var(--color-text);
     text-decoration: none;
+    cursor: pointer;
+    appearance: none;
   }
 
   .comment-telegram-cta:hover {

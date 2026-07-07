@@ -6,9 +6,10 @@ interface Props {
   lang: Locale;
   commentHref?: string;
   detailed?: boolean;
+  telegramUrl?: string;
 }
 
-const { channelMessageId, lang, commentHref, detailed = false } = Astro.props;
+const { channelMessageId, lang, commentHref, detailed = false, telegramUrl } = Astro.props;
 ---
 
 <p
@@ -19,6 +20,7 @@ const { channelMessageId, lang, commentHref, detailed = false } = Astro.props;
   data-loading="true"
   {...commentHref ? { 'data-comment-href': commentHref } : {}}
   {...detailed ? { 'data-detailed': 'true' } : {}}
+  {...telegramUrl ? { 'data-telegram-url': telegramUrl } : {}}
 >
   <span class="engagement-skeleton" aria-hidden="true">
     <span class="engagement-skeleton__pill" />

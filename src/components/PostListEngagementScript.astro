@@ -13,10 +13,15 @@
     delete el.dataset.loading;
   }
 
+  function isDetailedInteractive(el: HTMLElement): boolean {
+    return el.dataset.detailed === 'true' && Boolean(el.dataset.telegramUrl?.trim());
+  }
+
   function renderZeroState(el: HTMLElement) {
     const commentHref = el.dataset.commentHref?.trim() || undefined;
     const detailed = el.dataset.detailed === 'true';
     const lang = el.dataset.lang === 'en' ? 'en' : 'id';
+    const interactive = isDetailedInteractive(el);
 
     if (detailed) {
       const zeroEngagement: EngagementResponse = {
@@ -26,7 +31,7 @@
         telegramReactions: [],
         telegramCommentCount: 0,
       };
-      renderDetailedPostEngagement(el, zeroEngagement, lang);
+      renderDetailedPostEngagement(el, zeroEngagement, lang, { interactive });
       return;
     }
 
@@ -51,9 +56,10 @@
     }
 
     const commentHref = el.dataset.commentHref?.trim() || undefined;
+    const interactive = isDetailedInteractive(el);
 
     if (detailed) {
-      renderDetailedPostEngagement(el, data, lang);
+      renderDetailedPostEngagement(el, data, lang, { interactive });
     } else {
       const display = formatPostListEngagement(data, lang);
       renderPostListEngagement(el, display, { commentHref });
