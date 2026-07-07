@@ -1,0 +1,123 @@
+<script>
+  import {
+    fetchEngagement,
+    formatPostListEngagement,
+    renderDetailedPostEngagement,
+    renderPostListEngagement,
+  } from '../lib/blogEngagement.client';
+  import type { EngagementResponse } from '../lib/blogEngagement.client';
+
+  function renderZeroState(el: HTMLElement) {
+    const commentHref = el.dataset.commentHref?.trim() || undefined;
+    const detailed = el.dataset.detailed === 'true';
+    const lang = el.dataset.lang === 'en' ? 'en' : 'id';
+
+    if (detailed) {
+      const zeroEngagement: EngagementResponse = {
+        commentCount: 0,
+        likeCount: 0,
+        shareCount: 0,
+        telegramReactions: [],
+        telegramCommentCount: 0,
+      };
+      renderDetailedPostEngagement(el, zeroEngagement, lang);
+      return;
+    }
+
+    renderPostListEngagement(
+      el,
+      {
+        reaction: { emoji: '❤️', total: 0 },
+        comments: { total: 0 },
+      },
+      { commentHref },
+    );
+  }
+
+  async function loadEngagement(el: HTMLElement) {
+    const rawId = el.dataset.channelMessageId;
+    const lang = el.dataset.lang === 'en' ? 'en' : 'id';
+    const detailed = el.dataset.detailed === 'true';
+    const id = rawId ? Number(rawId) : NaN;
+    if (!Number.isInteger(id) || id <= 0) {
+      renderZeroState(el);
+      el.hidden = false;
+      el.dataset.loaded = 'true';
+      delete el.dataset.loading;
+      return;
+    }
+
+    const data = await fetchEngagement(id);
+    if (!data) {
+      renderZeroState(el);
+      el.hidden = false;
+      el.dataset.loaded = 'true';
+      delete el.dataset.loading;
+      return;
+    }
+
+    const commentHref = el.dataset.commentHref?.trim() || undefined;
+
+    if (detailed) {
+      renderDetailedPostEngagement(el, data, lang);
+    } else {
+      const display = formatPostListEngagement(data, lang);
+      renderPostListEngagement(el, display, { commentHref });
+    }
+
+    el.hidden = false;
+    el.dataset.loaded = 'true';
+    delete el.dataset.loading;
+  }
+
+  function scrollToComments(href: string) {
+    const targetId = href.replace(/^#/, '');
+    if (!targetId) return;
+
+    const target = document.getElementById(targetId);
+    if (!target) return;
+
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    const nextUrl = `${window.location.pathname}${window.location.search}#${targetId}`;
+    window.history.replaceState(null, '', nextUrl);
+  }
+
+  function initEngagementScrollLinks() {
+    if (window.__ojekkuEngagementScrollInit) return;
+    window.__ojekkuEngagementScrollInit = true;
+
+    document.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+
+      const anchor = target.closest<HTMLAnchorElement>(
+        '[data-post-engagement] a.engagement-pill--link, [data-post-engagement] a.comment-reaction-chip--link',
+      );
+      if (!anchor) return;
+
+      const href = anchor.getAttribute('href');
+      if (!href?.startsWith('#')) return;
+
+      event.preventDefault();
+      scrollToComments(href);
+    });
+  }
+
+  function initPostListEngagements() {
+    const pending = [...document.querySelectorAll<HTMLElement>('[data-post-engagement]')].filter(
+      (el) => !el.dataset.loaded,
+    );
+    void Promise.all(pending.map((el) => loadEngagement(el)));
+  }
+
+  initEngagementScrollLinks();
+
+  if (!window.__ojekkuPostListEngagementInit) {
+    window.__ojekkuPostListEngagementInit = true;
+    initPostListEngagements();
+    document.addEventListener('astro:page-load', initPostListEngagements);
+  } else {
+    initPostListEngagements();
+  }
+</script>

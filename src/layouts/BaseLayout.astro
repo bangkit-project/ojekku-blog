@@ -4,6 +4,7 @@ import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
 import OjekkuFontSizeScript from '../components/OjekkuFontSizeScript.astro';
 import OjekkuThemeScript from '../components/OjekkuThemeScript.astro';
+import PostListEngagementScript from '../components/PostListEngagementScript.astro';
 import type { Locale } from '../lib/translations';
 import '../styles/font-size-toggle.css';
 import '../styles/theme-toggle.css';
@@ -45,6 +46,7 @@ const resolvedPermalink = permalink ?? Astro.site?.href ?? Astro.url.href;
   </div>
   <OjekkuThemeScript />
   <OjekkuFontSizeScript />
+  {(pageKind === 'blog' || pageKind === 'article') && <PostListEngagementScript />}
 </body>
 </html>
 

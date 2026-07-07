@@ -8,6 +8,11 @@ import rehypeExternalLinks from 'rehype-external-links'
 // https://astro.build/config
 export default defineConfig({
   site: 'https://blog.ojekku.com',
+  image: {
+    remotePatterns: [
+      { protocol: 'https', hostname: 'ui-avatars.com' },
+    ],
+  },
   integrations: [mdx()],
   markdown: {
     processor: unified({

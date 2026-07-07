@@ -1,0 +1,28 @@
+---
+import type { Locale } from '../lib/translations';
+
+interface Props {
+  channelMessageId: number;
+  lang: Locale;
+  commentHref?: string;
+  detailed?: boolean;
+}
+
+const { channelMessageId, lang, commentHref, detailed = false } = Astro.props;
+---
+
+<p
+  class="post-list-meta post-list-engagement"
+  data-post-engagement
+  data-channel-message-id={channelMessageId}
+  data-lang={lang}
+  data-loading="true"
+  {...commentHref ? { 'data-comment-href': commentHref } : {}}
+  {...detailed ? { 'data-detailed': 'true' } : {}}
+>
+  <span class="engagement-skeleton" aria-hidden="true">
+    <span class="engagement-skeleton__pill" />
+    <span class="engagement-skeleton__pill" />
+  </span>
+  <span class="sr-only">{lang === 'en' ? 'Loading engagement' : 'Memuat reaksi dan komentar'}</span>
+</p>

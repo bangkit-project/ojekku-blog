@@ -12,6 +12,8 @@ coverImage: "/assets/blog/kenapa-ojekku-dibangun-cover.svg"
 # updatedDate: ""
 # telegramUrl: ""          # set by pnpm tg-sync
 # telegramMessageIds: []   # set by pnpm tg-sync
+telegramUrl: "https://t.me/ojekku_channel/29"
+telegramMessageIds: [29]
 ---
 Mendengar nama "Ojekku", langsung terbayang kalau ini adalah sebuah sistem untuk memesan ojek secara daring (online). Sebuah dugaan yang tidak sepenuhnya salah, memang itu salah satu fitur yang akan ada di sistem Ojekku yang sedang kami bangun ini.
 
@@ -21,6 +23,12 @@ Hasil pencarian kami (salah satunya [artikel ini](https://katadata.co.id/digital
 
 Alasan pertama sebenarnya sangat personal. Saya adalah seorang penggemar otomotif, dan menurut saya mengendarai kendaraan, baik itu motor maupun mobil, adalah pengalaman yang secara umum menyenangkan. Ya, saya suka menyetir. Dan tentu akan lebih menyenangkan kalau bisa mendapatkan penghasilan ekstra dari sana, bukan? Dan saya memang pernah berusaha mendaftar (dan diterima) sebagai driver di beberapa aplikasi ojol, meski sampai sekarang belum pernah mengambil orderan.
 
-Alasan saya enggan mengambil orderan salah satunya adalah karena menurut saya terlalu banyak peraturan yang absurd bagi seorang driver ojol. Misalnya tentang penggunaan atribut. Seorang driver akan dihukum kalau tidak menggunakan atribut sesuai aplikasinya, dan itu pun atributnya harus beli sendiri. Dan sebelum bisa mengambil orderan, seorang driver ternyata harus menyetor deposit sejumlah uang terlebih dahulu. Padahal saya sudah berbaik hati meminjamkan kendaraan dan tenaga saya untuk melayani customer mereka, kenapa harus dipersulit seperti itu? Sebuah pertanyaan yang selama ini cuma saya simpan di hati, karena saya sudah bisa menebak jawabannya : dengan model begitu saja masih banyak calon driver yang bersedia, jadi kalau ada yang rewel (seperti saya), akan sangat mudah mencari penggantinya. Atau bisa jadi jumlah driver memang sudah terlalu banyak sehingga mekanisme semacam ini memang diperlukan sebagai semacam proses seleksi alamiah. Intinya posisi tawar driver sangat lemah dalam hal ini. 
+Alasan saya enggan mengambil orderan salah satunya adalah karena menurut saya terlalu banyak peraturan yang absurd bagi seorang driver ojol. Misalnya tentang penggunaan atribut. Seorang driver akan dihukum kalau tidak menggunakan atribut sesuai aplikasinya, dan itu pun atributnya harus beli sendiri. Dan sebelum bisa mengambil orderan, seorang driver ternyata harus menyetor deposit sejumlah uang terlebih dahulu. Padahal saya sudah berbaik hati meminjamkan kendaraan dan tenaga saya untuk melayani customer mereka, kenapa harus dipersulit seperti itu? Sebuah pertanyaan yang selama ini cuma saya simpan di hati, karena saya sudah bisa menebak jawabannya : dengan model begitu saja masih banyak calon driver yang bersedia, jadi kalau ada yang rewel (seperti saya), akan sangat mudah mencari penggantinya. Atau bisa jadi jumlah driver memang sudah terlalu banyak sehingga mekanisme semacam ini memang diperlukan sebagai semacam proses seleksi alamiah. Intinya posisi tawar driver sangat lemah dalam hal ini.
 
-Dugaan saya semakin menguat ketika menyimak beberapa diskusi tentang dunia ojol, di mana jika ada driver mengeluh tentang sistem yang diterapkan aplikator, respon yang diterima hampir selalu : kalau memang keberatan, putus mitra saja, cari aplikasi lain. Sampai sini biasanya diskusi berhenti, karena sudah sama-sama tahu, di aplikasi lain pun tidak akan jauh berbeda kondisinya.
+Dugaan kami semakin menguat ketika menyimak beberapa diskusi tentang dunia ojol, di mana jika ada driver mengeluh tentang sistem yang diterapkan aplikator, respon yang diterima hampir selalu : kalau memang keberatan, putus mitra saja, cari aplikasi lain. Sampai sini biasanya diskusi berhenti, karena sudah sama-sama tahu, di aplikasi lain pun tidak akan jauh berbeda kondisinya.
+
+Jadi kesimpulannya, Ojekku ini dibangun berawal dari pengamatan kami bahwa ada sesuatu yang tidak beres dengan sistem yang sudah ada sekarang. Yang disampaikan di tulisan ini hanya sebagian kecil saja, masih ada banyak contoh lain yang akan kita bahas di tulisan selanjutnya.
+
+Lalu bagaimana Ojekku akan berbeda dari yang lain? Jangan jangan sistem Ojekku pun akan sama saja dengan yang lainnya? Simak terus tulisan kami selanjutnya bila Anda tertarik dengan solusi yang kami tawarkan melalui Ojekku ini.
+
+Terima kasih atas perhatiannya.

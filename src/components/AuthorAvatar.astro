@@ -1,0 +1,25 @@
+---
+import { Image } from 'astro:assets';
+
+interface Props {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+  eager?: boolean;
+}
+
+const { src, alt, width, height, eager = false } = Astro.props;
+const loading = eager ? "eager" : "lazy";
+const decoding = eager ? "sync" : "async";
+---
+
+<Image
+  src={src}
+  alt={alt}
+  width={width}
+  height={height}
+  loading={loading}
+  decoding={decoding}
+  data-author-avatar
+/>

@@ -395,6 +395,151 @@ td {
   line-height: 1.4;
 }
 
+.post-list-engagement {
+  white-space: nowrap;
+}
+
+.post-list-meta.post-list-engagement {
+  margin-top: 0.25em;
+}
+
+.post-list-engagement[data-loading="true"] .sr-only {
+  display: none;
+}
+
+.post-list-engagement[data-loading="true"] {
+  min-height: 1.4em;
+}
+
+.engagement-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  padding: 0.12em 0.6em;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--text-secondary) 22%, transparent);
+  background: color-mix(in srgb, var(--text-secondary) 10%, transparent);
+}
+
+.engagement-pill--link {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.engagement-pill--link:hover {
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.comment-reaction-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-color, #ddd);
+  background: var(--surface, #fff);
+  font-size: 0.9rem;
+}
+
+.comment-reaction-chip .engagement-text {
+  font-family: var(--font-family-sans);
+  color: inherit;
+}
+
+.comment-reaction-chip--link {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.comment-reaction-chip--link:hover {
+  border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.post-list-engagement {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.engagement-emoji-group {
+  display: inline-flex;
+  align-items: center;
+}
+
+.engagement-emoji-group__item {
+  font-variant-emoji: emoji;
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+}
+
+.engagement-emoji-group__item + .engagement-emoji-group__item {
+  margin-inline-start: -0.35em;
+}
+
+.engagement-skeleton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  vertical-align: baseline;
+}
+
+.engagement-skeleton__pill {
+  display: inline-block;
+  height: 1.1em;
+  width: 4.2em;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--text-secondary) 10%, transparent) 0%,
+    color-mix(in srgb, var(--text-secondary) 22%, transparent) 40%,
+    color-mix(in srgb, var(--text-secondary) 10%, transparent) 80%
+  );
+  background-size: 200% 100%;
+  animation: engagement-skeleton-shimmer 1.1s ease-in-out infinite;
+}
+
+@keyframes engagement-skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.engagement-emoji {
+  font-variant-emoji: emoji;
+  font-family: 'Apple Color Emoji', 'Segoe UI Emoji', 'Noto Color Emoji', sans-serif;
+}
+
+.engagement-text {
+  font-family: var(--font-family-sans);
+  color: inherit;
+}
+
+.post-list-hero-overlay .post-list-engagement {
+  color: inherit;
+}
+
+.content .post-list-engagement {
+  margin: 0 0 1.5rem;
+}
+
+.content .post-list-engagement a.engagement-pill--link,
+.content .post-list-engagement a.comment-reaction-chip--link {
+  text-decoration: none;
+  box-shadow: none;
+}
+
+.content .post-list-engagement a.engagement-pill--link:hover,
+.content .post-list-engagement a.comment-reaction-chip--link:hover {
+  color: inherit;
+  box-shadow: none;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
 .post-list-item--featured {
   border-bottom: 1px solid var(--text-secondary);
   padding-bottom: 2em;
@@ -498,7 +643,7 @@ td {
   align-items: center;
   gap: 0.75em;
   margin-bottom: 1.75rem;
-  font-family: var(--font-family-sans);
+  font-family: var(--font-family-serif);
   font-size: 0.875rem;
   color: var(--text-secondary);
 }
@@ -506,6 +651,11 @@ td {
 .post-article-meta p {
   margin: 0;
   line-height: 1.4;
+  font-size: inherit;
+}
+
+.post-article-meta__details {
+  font-weight: 400;
 }
 
 .post-article-meta img {

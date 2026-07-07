@@ -12,9 +12,6 @@ const { locale, class: className = "" } = Astro.props;
 <nav
   class:list={["font-size-toggle", className]}
   aria-label={t("fontSizeSwitchLabel", locale)}
-  aria-valuemin="0"
-  aria-valuemax="4"
-  aria-valuenow="1"
 >
   <button
     type="button"

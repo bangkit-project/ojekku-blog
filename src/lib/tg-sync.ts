@@ -269,7 +269,7 @@ export function buildTelegramDeepLink(
 
 export type PostFrontmatter = {
   title: string;
-  description: string;
+  description?: string;
   draft: boolean;
   publishDate: Date;
   coverImage?: string;
@@ -295,10 +295,6 @@ export function parsePostFrontmatter(content: string): PostFrontmatter {
 
   if (!title) {
     throw new Error('Frontmatter field "title" is required.');
-  }
-
-  if (!description) {
-    throw new Error('Frontmatter field "description" is required.');
   }
 
   const publishDate = publishDateRaw ? new Date(publishDateRaw) : new Date(0);

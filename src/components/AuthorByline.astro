@@ -1,6 +1,7 @@
 ---
 import type { AuthorId } from '../lib/authors';
 import { getAuthor } from '../lib/authors';
+import AuthorAvatar from './AuthorAvatar.astro';
 
 interface Props {
   authorId: AuthorId;
@@ -22,18 +23,17 @@ const hasMeta = Astro.slots.has('meta');
   data-author-byline
   data-author-id={authorId}
 >
-  <img
+  <AuthorAvatar
     src={author.avatarUrl}
     alt={author.name}
     width={imgSize}
     height={imgSize}
-    loading="lazy"
-    data-author-avatar
+    eager={variant === 'article'}
   />
   <div>
     <p><strong data-author-name>{author.name}</strong></p>
     {hasMeta && (
-      <p>
+      <p class={variant === 'article' ? 'post-article-meta__details' : undefined}>
         <slot name="meta" />
       </p>
     )}

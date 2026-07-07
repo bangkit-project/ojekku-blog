@@ -1,5 +1,6 @@
 ---
 import CoverImage from './CoverImage.astro';
+import PostEngagementPills from './PostEngagementPills.astro';
 import type { BlogData } from '../content.config';
 import { getReadingTimeMinutes, formatReadingTime } from '../lib/reading-time';
 import type { Locale } from '../lib/translations';
@@ -16,6 +17,7 @@ interface Props {
 
 const { slug, lang, data, body = '', dateLocale, currentPage, featured = false } = Astro.props;
 const cover = data.coverImage;
+const channelMessageId = data.telegramMessageIds?.[0];
 const href = `/${lang}/blog/${slug}${currentPage > 1 ? `?from=${currentPage}` : ''}`;
 const readingTime = formatReadingTime(getReadingTimeMinutes(body), lang);
 const formattedDate = data.publishDate.toLocaleDateString(dateLocale, {
@@ -47,6 +49,9 @@ const formattedDate = data.publishDate.toLocaleDateString(dateLocale, {
           {' · '}
           <span>{readingTime}</span>
         </p>
+        {channelMessageId && (
+          <PostEngagementPills channelMessageId={channelMessageId} lang={lang} />
+        )}
       </div>
     </a>
   </li>
@@ -66,6 +71,9 @@ const formattedDate = data.publishDate.toLocaleDateString(dateLocale, {
             {' · '}
             <span>{readingTime}</span>
           </p>
+          {channelMessageId && (
+            <PostEngagementPills channelMessageId={channelMessageId} lang={lang} />
+          )}
         </div>
       </div>
     </a>

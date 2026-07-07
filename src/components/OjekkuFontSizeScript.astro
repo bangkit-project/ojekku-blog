@@ -37,9 +37,6 @@
 
     function syncFontSizeToggle() {
       var level = currentLevel();
-      document.querySelectorAll(".font-size-toggle").forEach(function (nav) {
-        nav.setAttribute("aria-valuenow", String(level));
-      });
       document.querySelectorAll("[data-font-size-step]").forEach(function (btn) {
         var step = btn.getAttribute("data-font-size-step");
         if (step === "down") {

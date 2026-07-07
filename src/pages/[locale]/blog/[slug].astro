@@ -9,6 +9,7 @@ import { getReadingTimeMinutes, formatReadingTime } from '../../../lib/reading-t
 import { t, tBlogHeaderTitle } from '../../../lib/translations';
 import AuthorByline from '../../../components/AuthorByline.astro';
 import CommentSection from '../../../components/CommentSection.astro';
+import PostEngagementPills from '../../../components/PostEngagementPills.astro';
 import { getIdEquivalentPath, PUBLIC_LOCALES } from '../../../lib/locale-path';
 import type { Locale } from '../../../lib/translations';
 
@@ -60,6 +61,7 @@ const olderData = olderEntry ? (olderEntry.data as BlogData) : undefined;
 const readingTime = getReadingTimeMinutes(entry.body ?? '');
 const dateLocale = lang === 'en' ? 'en-US' : 'id-ID';
 const permalink = `${Astro.site?.href ?? ''}${lang}/blog/${slug}`;
+const channelMessageId = data.telegramMessageIds?.[0];
 ---
 
 <BaseLayout
@@ -118,12 +120,12 @@ const permalink = `${Astro.site?.href ?? ''}${lang}/blog/${slug}`;
         </AuthorByline>
       )}
 
-      {data.telegramUrl && (
-        <p class="telegram-discussion">
-          <a href={data.telegramUrl} rel="noopener noreferrer" target="_blank">
-            {t('telegramDiscussion', lang)}
-          </a>
-        </p>
+      {channelMessageId && (
+        <PostEngagementPills
+          channelMessageId={channelMessageId}
+          lang={lang}
+          detailed
+        />
       )}
 
       {data.coverImage && (
@@ -193,19 +195,6 @@ const permalink = `${Astro.site?.href ?? ''}${lang}/blog/${slug}`;
 </BaseLayout>
 
 <style>
-  .telegram-discussion {
-    margin: 0 0 1.5rem;
-  }
-
-  .telegram-discussion a {
-    color: var(--accent);
-    text-decoration: none;
-  }
-
-  .telegram-discussion a:hover {
-    text-decoration: underline;
-  }
-
   .article-cover {
     margin: 0 0 2rem;
   }

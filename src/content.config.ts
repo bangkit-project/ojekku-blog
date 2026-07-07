@@ -6,7 +6,7 @@ import { parseFilename } from "./content/blog-utils";
 export const blogSchema = z.object({
   id: z.string().uuid(),
   title: z.string(),
-  description: z.string(),
+  description: z.string().default(""),
   publishDate: z.coerce.date(),
   draft: z.boolean().default(false),
   tags: z.array(z.string()).optional(),

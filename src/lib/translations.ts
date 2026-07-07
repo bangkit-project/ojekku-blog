@@ -50,7 +50,6 @@ const translations = {
   },
   minReadOne: { en: "1 min read", id: "1 menit baca" },
   minRead: { en: "min read", id: "menit baca" },
-  telegramDiscussion: { en: "Discuss on Telegram", id: "Diskusi di Telegram" },
 } as const;
 
 type StringKey = Exclude<keyof typeof translations, "pageOf">;

@@ -236,12 +236,39 @@ Body`;
     });
   });
 
-  it("throws when description is missing", () => {
-    expect(() =>
+  it("allows missing description", () => {
+    expect(
       parsePostFrontmatter(`---
 title: Only title
----`),
-    ).toThrow('Frontmatter field "description" is required.');
+publishDate: "2026-06-22T10:00:00"
+draft: false
+---
+
+Body`),
+    ).toEqual({
+      title: "Only title",
+      description: undefined,
+      draft: false,
+      publishDate: new Date("2026-06-22T10:00:00"),
+    });
+  });
+
+  it("allows empty description", () => {
+    expect(
+      parsePostFrontmatter(`---
+title: Post title
+description: ""
+publishDate: "2026-06-22T10:00:00"
+draft: false
+---
+
+Body`),
+    ).toEqual({
+      title: "Post title",
+      description: "",
+      draft: false,
+      publishDate: new Date("2026-06-22T10:00:00"),
+    });
   });
 });
 

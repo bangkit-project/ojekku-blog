@@ -8,6 +8,11 @@ export interface BlogComment {
   body: string;
   createdAt: string;
   parentCommentId?: string | null;
+  telegramMessageId?: number;
+  replyToMessageId?: number;
+  discussionRootMessageId?: number;
+  replyCount?: number;
+  deletedAt?: string | null;
 }
 
 export interface TelegramReaction {
@@ -108,6 +113,36 @@ export async function fetchComments(channelMessageId: number, page = 1): Promise
   }
 }
 
+export async function fetchCommentReplies(
+  channelMessageId: number,
+  parentTelegramMessageId: number,
+  page = 1,
+): Promise<CommentListResponse | null> {
+  const path = telegramMessagePath(channelMessageId);
+  if (!path) return null;
+  try {
+    const res = await fetch(
+      `${path}/comments/${parentTelegramMessageId}/replies?page=${page}`,
+      { headers: { Accept: "application/json" } },
+    );
+    if (!res.ok) return null;
+    return (await res.json()) as CommentListResponse;
+  } catch {
+    return null;
+  }
+}
+
+export function formatReplyCountLabel(count: number, lang: string): string {
+  if (lang === "en") {
+    return count === 1 ? "View 1 reply" : `View ${count} replies`;
+  }
+  return count === 1 ? "Lihat 1 balasan" : `Lihat ${count} balasan`;
+}
+
+export function formatDeletedCommentLabel(lang: string): string {
+  return lang === "en" ? "Comment deleted" : "Komentar dihapus";
+}
+
 export async function fetchEngagement(channelMessageId: number): Promise<EngagementResponse | null> {
   const path = telegramMessagePath(channelMessageId);
   if (!path) return null;
@@ -149,12 +184,27 @@ export async function postComment(
 
 export function buildCommentTree(items: BlogComment[]): CommentNode[] {
   const byId = new Map<string, CommentNode>();
+  const byTelegramMessageId = new Map<number, CommentNode>();
   for (const item of items) {
-    byId.set(item.id, { ...item, children: [] });
+    const node: CommentNode = { ...item, children: [] };
+    byId.set(item.id, node);
+    if (item.telegramMessageId != null) {
+      byTelegramMessageId.set(item.telegramMessageId, node);
+    }
   }
 
   const roots: CommentNode[] = [];
   for (const node of byId.values()) {
+    if (node.telegramMessageId != null && node.replyToMessageId != null) {
+      const parent = byTelegramMessageId.get(node.replyToMessageId);
+      if (parent && parent.telegramMessageId !== node.telegramMessageId) {
+        parent.children.push(node);
+      } else if (node.replyToMessageId === node.discussionRootMessageId) {
+        roots.push(node);
+      }
+      continue;
+    }
+
     const parentId = node.parentCommentId;
     if (parentId && byId.has(parentId)) {
       byId.get(parentId)!.children.push(node);
@@ -187,4 +237,167 @@ export function formatCommentDate(iso: string, locale: string): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+export function sumReactionCounts(reactions?: TelegramReaction[]): number {
+  if (!reactions?.length) return 0;
+  return reactions.reduce((sum, reaction) => sum + reaction.count, 0);
+}
+
+export interface PostListEngagementDisplay {
+  reaction: { emoji: string; total: number };
+  comments: { total: number };
+}
+
+export function formatPostListEngagement(
+  engagement: EngagementResponse,
+  lang: "id" | "en",
+): PostListEngagementDisplay {
+  const reactions = engagement.telegramReactions ?? [];
+  const reactionTotal = sumReactionCounts(reactions);
+  const commentCount = engagement.telegramCommentCount ?? engagement.commentCount ?? 0;
+
+  const reactionEmoji =
+    reactionTotal > 0 ? [...reactions].sort((a, b) => b.count - a.count)[0]?.emoji ?? "👍" : "❤️";
+
+  return {
+    reaction: { emoji: reactionEmoji, total: reactionTotal },
+    comments: { total: commentCount },
+  };
+}
+
+export function formatReactionCountLabel(count: number, lang: "id" | "en"): string {
+  if (lang === "en") {
+    return count === 1 ? "1 reaction" : `${count} reactions`;
+  }
+  return `${count} reaksi`;
+}
+
+export function formatCommentCountLabel(count: number, lang: "id" | "en"): string {
+  if (lang === "en") {
+    return count === 1 ? "1 comment" : `${count} comments`;
+  }
+  return `${count} komentar`;
+}
+
+export interface DetailedPostEngagementDisplay {
+  reactionEmojis: string[];
+  reactionLabel: string;
+  commentLabel: string;
+}
+
+export function formatDetailedPostEngagement(
+  engagement: EngagementResponse,
+  lang: "id" | "en",
+): DetailedPostEngagementDisplay {
+  const reactions = engagement.telegramReactions ?? [];
+  const reactionTotal = sumReactionCounts(reactions);
+  const commentCount = engagement.telegramCommentCount ?? engagement.commentCount ?? 0;
+
+  const reactionEmojis =
+    reactionTotal === 0
+      ? ["❤️"]
+      : [...reactions]
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 3)
+          .map((reaction) => reaction.emoji);
+
+  return {
+    reactionEmojis,
+    reactionLabel: formatReactionCountLabel(reactionTotal, lang),
+    commentLabel: formatCommentCountLabel(commentCount, lang),
+  };
+}
+
+export function renderPostListEngagement(
+  el: HTMLElement,
+  display: PostListEngagementDisplay,
+  options?: { commentHref?: string },
+): void {
+  el.replaceChildren();
+
+  const commentHref = options?.commentHref?.trim() || undefined;
+  el.appendChild(
+    makeEngagementPill([display.reaction.emoji], String(display.reaction.total)),
+  );
+  el.appendChild(
+    makeEngagementPill(["💬"], String(display.comments.total), commentHref),
+  );
+}
+
+export function renderDetailedPostEngagement(
+  el: HTMLElement,
+  engagement: EngagementResponse,
+  lang: "id" | "en",
+): void {
+  el.replaceChildren();
+
+  const display = formatDetailedPostEngagement(engagement, lang);
+  el.appendChild(makeEngagementPill(display.reactionEmojis, display.reactionLabel));
+  el.appendChild(makeEngagementPill(["💬"], display.commentLabel));
+}
+
+function appendEmojiToPill(pill: HTMLElement, emojis: string[]): void {
+  if (emojis.length <= 1) {
+    const emoji = document.createElement("span");
+    emoji.className = "engagement-emoji";
+    emoji.setAttribute("aria-hidden", "true");
+    emoji.textContent = emojis[0] ?? "❤️";
+    pill.appendChild(emoji);
+    return;
+  }
+
+  const group = document.createElement("span");
+  group.className = "engagement-emoji-group";
+  group.setAttribute("aria-hidden", "true");
+  for (const emojiText of emojis) {
+    const item = document.createElement("span");
+    item.className = "engagement-emoji-group__item";
+    item.textContent = emojiText;
+    group.appendChild(item);
+  }
+  pill.appendChild(group);
+}
+
+function makeEngagementPill(emojis: string[], labelText: string, href?: string): HTMLElement {
+  const pill = document.createElement(href ? "a" : "span");
+  pill.className = href ? "engagement-pill engagement-pill--link" : "engagement-pill";
+  if (href) {
+    (pill as HTMLAnchorElement).href = href;
+  }
+
+  appendEmojiToPill(pill, emojis);
+
+  const label = document.createElement("span");
+  label.className = "engagement-text";
+  label.textContent = labelText;
+  pill.appendChild(label);
+
+  return pill;
+}
+
+export function renderReactionChip(
+  parent: HTMLElement,
+  emoji: string,
+  count: number,
+  href?: string,
+): void {
+  const chip = document.createElement(href ? 'a' : 'span');
+  chip.className = href ? 'comment-reaction-chip comment-reaction-chip--link' : 'comment-reaction-chip';
+  if (href) {
+    (chip as HTMLAnchorElement).href = href;
+  }
+
+  const emojiSpan = document.createElement('span');
+  emojiSpan.className = 'engagement-emoji';
+  emojiSpan.setAttribute('aria-hidden', 'true');
+  emojiSpan.textContent = emoji;
+  chip.appendChild(emojiSpan);
+
+  const textSpan = document.createElement('span');
+  textSpan.className = 'engagement-text';
+  textSpan.textContent = ` ${count}`;
+  chip.appendChild(textSpan);
+
+  parent.appendChild(chip);
 }
