@@ -32,14 +32,9 @@ const labels = {
 </div>
 
 <script>
-  import {
-    initAllTelegramJoinDialogs,
-    initTelegramJoinTriggers,
-  } from '../lib/telegramJoinDialog.client';
+  import { initTelegramJoinTriggers } from '../lib/telegramJoinDialog.client';
 
   initTelegramJoinTriggers();
-  initAllTelegramJoinDialogs();
-  document.addEventListener('astro:page-load', initAllTelegramJoinDialogs);
 </script>
 
 <style>

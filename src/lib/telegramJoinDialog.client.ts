@@ -1,5 +1,14 @@
 let pendingTelegramUrl = "";
-let dialogEl: HTMLDialogElement | null = null;
+
+const PAGE_SCROLL_LOCK_CLASS = "telegram-join-dialog-open";
+
+function lockPageScroll(): void {
+  document.documentElement.classList.add(PAGE_SCROLL_LOCK_CLASS);
+}
+
+function unlockPageScroll(): void {
+  document.documentElement.classList.remove(PAGE_SCROLL_LOCK_CLASS);
+}
 
 export function resolveTelegramUrlFromTrigger(trigger: HTMLElement): string | null {
   const container = trigger.closest<HTMLElement>("[data-telegram-url]");
@@ -7,48 +16,62 @@ export function resolveTelegramUrlFromTrigger(trigger: HTMLElement): string | nu
   return url || null;
 }
 
-export function initTelegramJoinDialog(root: HTMLElement): void {
-  const dialog = root.querySelector<HTMLDialogElement>("[data-telegram-join-dialog]");
-  if (!dialog || dialog.dataset.telegramJoinBound === "true") return;
-
-  dialog.dataset.telegramJoinBound = "true";
-  dialogEl = dialog;
-
-  const ok = root.querySelector<HTMLButtonElement>("[data-telegram-join-ok]");
-  const cancel = root.querySelector<HTMLButtonElement>("[data-telegram-join-cancel]");
-
-  cancel?.addEventListener("click", () => {
-    dialog.close();
-  });
-
-  ok?.addEventListener("click", () => {
-    if (pendingTelegramUrl) {
-      window.open(pendingTelegramUrl, "_blank", "noopener,noreferrer");
-    }
-    dialog.close();
-  });
-
-  dialog.addEventListener("click", (event) => {
-    if (event.target === dialog) {
-      dialog.close();
-    }
-  });
+function getLiveTelegramJoinDialog(): HTMLDialogElement | null {
+  const dialog = document.querySelector<HTMLDialogElement>("[data-telegram-join-dialog]");
+  return dialog?.isConnected ? dialog : null;
 }
 
 export function openTelegramJoinDialog(telegramUrl: string): void {
   const url = telegramUrl.trim();
-  if (!url || !dialogEl) return;
+  const dialog = getLiveTelegramJoinDialog();
+  if (!url || !dialog) return;
   pendingTelegramUrl = url;
-  dialogEl.showModal();
+  lockPageScroll();
+  dialog.showModal();
 }
 
 export function initTelegramJoinTriggers(): void {
   if (window.__ojekkuTelegramJoinInit) return;
   window.__ojekkuTelegramJoinInit = true;
 
+  document.addEventListener(
+    "close",
+    (event) => {
+      const dialog = event.target;
+      if (dialog instanceof HTMLDialogElement && dialog.matches("[data-telegram-join-dialog]")) {
+        unlockPageScroll();
+      }
+    },
+    true,
+  );
+
   document.addEventListener("click", (event) => {
     const target = event.target;
     if (!(target instanceof Element)) return;
+
+    if (target.closest("[data-telegram-join-ok]")) {
+      const dialog = getLiveTelegramJoinDialog();
+      if (!dialog) return;
+      if (pendingTelegramUrl) {
+        window.open(pendingTelegramUrl, "_blank", "noopener,noreferrer");
+      }
+      pendingTelegramUrl = "";
+      dialog.close();
+      return;
+    }
+
+    if (target.closest("[data-telegram-join-cancel]")) {
+      pendingTelegramUrl = "";
+      getLiveTelegramJoinDialog()?.close();
+      return;
+    }
+
+    const backdropDialog = target.closest<HTMLDialogElement>("[data-telegram-join-dialog]");
+    if (backdropDialog && event.target === backdropDialog) {
+      pendingTelegramUrl = "";
+      backdropDialog.close();
+      return;
+    }
 
     const trigger = target.closest<HTMLElement>("[data-telegram-join-trigger]");
     if (!trigger) return;
@@ -59,10 +82,4 @@ export function initTelegramJoinTriggers(): void {
     event.preventDefault();
     openTelegramJoinDialog(url);
   });
-}
-
-export function initAllTelegramJoinDialogs(): void {
-  document
-    .querySelectorAll<HTMLElement>("[data-telegram-join-dialog-root]")
-    .forEach(initTelegramJoinDialog);
 }

@@ -67,6 +67,14 @@ html[data-font-size="4"] {
   }
 }
 
+html.telegram-join-dialog-open {
+  overflow: hidden;
+}
+
+html.telegram-join-dialog-open body {
+  overflow: hidden;
+}
+
 *,
 *:before,
 *:after {
