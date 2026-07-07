@@ -347,12 +347,34 @@ export function buildCommentTree(items: BlogComment[]): CommentNode[] {
 
 export function formatCommentDate(iso: string, locale: string): string {
   const date = new Date(iso);
-  return date.toLocaleString(locale === "en" ? "en-US" : "id-ID", {
+  if (Number.isNaN(date.getTime())) return iso;
+
+  const lang = locale === "en" ? "en" : "id";
+  const diffSec = Math.round((date.getTime() - Date.now()) / 1000);
+  const absSec = Math.abs(diffSec);
+
+  if (absSec < 45) {
+    return lang === "en" ? "just now" : "baru saja";
+  }
+
+  const rtf = new Intl.RelativeTimeFormat(lang === "en" ? "en-US" : "id-ID", {
+    numeric: "auto",
+  });
+
+  if (absSec < 3600) {
+    return rtf.format(Math.round(diffSec / 60), "minute");
+  }
+  if (absSec < 86400) {
+    return rtf.format(Math.round(diffSec / 3600), "hour");
+  }
+  if (absSec < 604800) {
+    return rtf.format(Math.round(diffSec / 86400), "day");
+  }
+
+  return date.toLocaleDateString(lang === "en" ? "en-US" : "id-ID", {
     year: "numeric",
     month: "short",
     day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
   });
 }
 

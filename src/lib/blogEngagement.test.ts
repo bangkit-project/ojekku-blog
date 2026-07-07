@@ -6,6 +6,7 @@ import {
   buildLoginUrl,
   fetchBulkEngagement,
   formatCommentCountLabel,
+  formatCommentDate,
   formatDeletedCommentLabel,
   formatDetailedPostEngagement,
   formatPostListEngagement,
@@ -28,6 +29,52 @@ describe("blogEngagement.client", () => {
 
   it("buildLoginUrl returns null when API base unset", () => {
     expect(buildLoginUrl("http://localhost:4321/id/blog/foo")).toBeNull();
+  });
+
+  describe("formatCommentDate", () => {
+    const now = new Date("2026-07-07T14:00:00.000Z");
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("returns just now / baru saja for comments under 45 seconds old", () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(now);
+
+      expect(formatCommentDate("2026-07-07T13:59:30.000Z", "en")).toBe("just now");
+      expect(formatCommentDate("2026-07-07T13:59:30.000Z", "id")).toBe("baru saja");
+    });
+
+    it("returns relative minutes in id and en", () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(now);
+
+      expect(formatCommentDate("2026-07-07T13:55:00.000Z", "id")).toBe("5 menit yang lalu");
+      expect(formatCommentDate("2026-07-07T13:55:00.000Z", "en")).toBe("5 minutes ago");
+    });
+
+    it("returns yesterday / kemarin for comments one day old", () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(now);
+
+      expect(formatCommentDate("2026-07-06T14:00:00.000Z", "id")).toBe("kemarin");
+      expect(formatCommentDate("2026-07-06T14:00:00.000Z", "en")).toBe("yesterday");
+    });
+
+    it("falls back to absolute date for comments older than 7 days", () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(now);
+
+      const formatted = formatCommentDate("2026-06-20T14:00:00.000Z", "en");
+      expect(formatted).not.toContain("ago");
+      expect(formatted).toMatch(/Jun/);
+      expect(formatted).toMatch(/2026/);
+    });
+
+    it("returns original string for invalid ISO input", () => {
+      expect(formatCommentDate("not-a-date", "id")).toBe("not-a-date");
+    });
   });
 
   it("buildCommentTree nests replies and sorts roots desc, children asc", () => {
