@@ -2,22 +2,41 @@
 import BaseHead from '../components/BaseHead.astro';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
+import OjekkuFontSizeScript from '../components/OjekkuFontSizeScript.astro';
+import OjekkuThemeScript from '../components/OjekkuThemeScript.astro';
+import PostListEngagementScript from '../components/PostListEngagementScript.astro';
+import type { Locale } from '../lib/translations';
+import '../styles/font-size-toggle.css';
+import '../styles/theme-toggle.css';
 
 export interface Props {
   title: string;
   description: string;
-  permalink: string;
+  headerTitle?: string;
+  permalink?: string;
   current?: string;
+  lang?: Locale;
+  pageKind?: 'article' | 'blog' | 'default';
 }
-const { title, description, permalink, current } = Astro.props;
+
+const { title, description, headerTitle, permalink, current, lang = 'id', pageKind = 'default' } = Astro.props;
+const resolvedHeaderTitle = headerTitle ?? title;
+const resolvedPermalink = permalink ?? Astro.site?.href ?? Astro.url.href;
 ---
-<html lang="en">
+
+<html lang={lang} data-theme="dark" data-font-size="1">
 <head>
-  <BaseHead title={title} description={description} permalink={permalink} />
+  <BaseHead title={title} description={description} permalink={resolvedPermalink} />
 </head>
 <body>
-  <div class="layout">
-    <Header current={current} />
+  <div class:list={['layout', pageKind === 'article' && 'layout--article']}>
+    <Header
+      headerTitle={resolvedHeaderTitle}
+      current={current}
+      lang={lang}
+      titleVariant={pageKind === 'article' || pageKind === 'blog' ? 'article' : 'default'}
+      titleTag={pageKind === 'article' ? 'p' : 'h1'}
+    />
 
     <main>
       <slot />
@@ -25,6 +44,9 @@ const { title, description, permalink, current } = Astro.props;
 
     <Footer />
   </div>
+  <OjekkuThemeScript />
+  <OjekkuFontSizeScript />
+  {(pageKind === 'blog' || pageKind === 'article') && <PostListEngagementScript />}
 </body>
 </html>
 

@@ -1,0 +1,37 @@
+---
+import type { AuthorId } from '../lib/authors';
+import { getAuthor } from '../lib/authors';
+import AuthorAvatar from './AuthorAvatar.astro';
+
+interface Props {
+  authorId: AuthorId;
+  /** compact = list cards; article = post header */
+  variant?: 'compact' | 'article';
+}
+
+const { authorId, variant = 'compact' } = Astro.props;
+const author = getAuthor(authorId);
+if (!author) return null;
+
+const imgSize = variant === 'article' ? 40 : 32;
+const className = variant === 'article' ? 'post-article-meta' : 'post-list-meta';
+const hasMeta = Astro.slots.has('meta');
+---
+
+<div class={className}>
+  <AuthorAvatar
+    src={author.avatarUrl}
+    alt={author.name}
+    width={imgSize}
+    height={imgSize}
+    eager={variant === 'article'}
+  />
+  <div>
+    <p><strong>{author.name}</strong></p>
+    {hasMeta && (
+      <p class={variant === 'article' ? 'post-article-meta__details' : undefined}>
+        <slot name="meta" />
+      </p>
+    )}
+  </div>
+</div>

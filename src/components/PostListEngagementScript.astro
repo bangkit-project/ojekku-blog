@@ -1,0 +1,164 @@
+<script>
+  import {
+    fetchBulkEngagement,
+    formatPostListEngagement,
+    renderDetailedPostEngagement,
+    renderPostListEngagement,
+  } from '../lib/blogEngagement.client';
+  import type { EngagementResponse } from '../lib/blogEngagement.client';
+
+  function markEngagementLoaded(el: HTMLElement) {
+    el.hidden = false;
+    el.dataset.loaded = 'true';
+    delete el.dataset.loading;
+  }
+
+  function isDetailedInteractive(el: HTMLElement): boolean {
+    return el.dataset.detailed === 'true' && Boolean(el.dataset.telegramUrl?.trim());
+  }
+
+  function renderZeroState(el: HTMLElement) {
+    const commentHref = el.dataset.commentHref?.trim() || undefined;
+    const detailed = el.dataset.detailed === 'true';
+    const lang = el.dataset.lang === 'en' ? 'en' : 'id';
+    const interactive = isDetailedInteractive(el);
+
+    if (detailed) {
+      const zeroEngagement: EngagementResponse = {
+        commentCount: 0,
+        likeCount: 0,
+        shareCount: 0,
+        telegramReactions: [],
+        telegramCommentCount: 0,
+      };
+      renderDetailedPostEngagement(el, zeroEngagement, lang, { interactive });
+      return;
+    }
+
+    renderPostListEngagement(
+      el,
+      {
+        reaction: { emoji: '❤️', total: 0 },
+        comments: { total: 0 },
+      },
+      { commentHref },
+    );
+  }
+
+  function applyEngagement(el: HTMLElement, data: EngagementResponse | null) {
+    const lang = el.dataset.lang === 'en' ? 'en' : 'id';
+    const detailed = el.dataset.detailed === 'true';
+
+    if (!data) {
+      renderZeroState(el);
+      markEngagementLoaded(el);
+      return;
+    }
+
+    const commentHref = el.dataset.commentHref?.trim() || undefined;
+    const interactive = isDetailedInteractive(el);
+
+    if (detailed) {
+      renderDetailedPostEngagement(el, data, lang, { interactive });
+    } else {
+      const display = formatPostListEngagement(data, lang);
+      renderPostListEngagement(el, display, { commentHref });
+    }
+
+    markEngagementLoaded(el);
+  }
+
+  function parseChannelMessageId(el: HTMLElement): number {
+    const rawId = el.dataset.channelMessageId;
+    const id = rawId ? Number(rawId) : NaN;
+    return Number.isInteger(id) && id > 0 ? id : NaN;
+  }
+
+  function scrollToComments(href: string) {
+    const targetId = href.replace(/^#/, '');
+    if (!targetId) return;
+
+    const target = document.getElementById(targetId);
+    if (!target) return;
+
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    const nextUrl = `${window.location.pathname}${window.location.search}#${targetId}`;
+    window.history.replaceState(null, '', nextUrl);
+  }
+
+  function initEngagementScrollLinks() {
+    if (window.__ojekkuEngagementScrollInit) return;
+    window.__ojekkuEngagementScrollInit = true;
+
+    document.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+
+      const anchor = target.closest<HTMLAnchorElement>(
+        '[data-post-engagement] a.engagement-pill--link',
+      );
+      if (!anchor) return;
+
+      const href = anchor.getAttribute('href');
+      if (!href?.startsWith('#')) return;
+
+      event.preventDefault();
+      scrollToComments(href);
+    });
+  }
+
+  async function initPostListEngagements() {
+    const pending = [...document.querySelectorAll<HTMLElement>('[data-post-engagement]')].filter(
+      (el) => !el.dataset.loaded,
+    );
+    if (pending.length === 0) return;
+
+    const validElements: HTMLElement[] = [];
+    const ids: number[] = [];
+    const seenIds = new Set<number>();
+
+    for (const el of pending) {
+      const id = parseChannelMessageId(el);
+      if (!Number.isInteger(id)) {
+        renderZeroState(el);
+        markEngagementLoaded(el);
+        continue;
+      }
+
+      validElements.push(el);
+      if (!seenIds.has(id)) {
+        seenIds.add(id);
+        ids.push(id);
+      }
+    }
+
+    const engagementById = new Map<number, EngagementResponse>();
+    if (ids.length > 0) {
+      const items = await fetchBulkEngagement(ids);
+      if (items) {
+        for (const item of items) {
+          const { channelMessageId, ...engagement } = item;
+          engagementById.set(channelMessageId, engagement);
+        }
+      }
+    }
+
+    for (const el of validElements) {
+      const id = parseChannelMessageId(el);
+      applyEngagement(el, engagementById.get(id) ?? null);
+    }
+  }
+
+  initEngagementScrollLinks();
+
+  if (!window.__ojekkuPostListEngagementInit) {
+    window.__ojekkuPostListEngagementInit = true;
+    void initPostListEngagements();
+    document.addEventListener('astro:page-load', () => {
+      void initPostListEngagements();
+    });
+  } else {
+    void initPostListEngagements();
+  }
+</script>

@@ -1,0 +1,46 @@
+<script is:inline>
+  (function () {
+    var STORAGE_KEY = "ojekku-theme";
+    var META_COLORS = { light: "#f8fafc", dark: "#0b1020" };
+
+    function resolveTheme() {
+      var stored = localStorage.getItem(STORAGE_KEY);
+      if (stored === "light" || stored === "dark") return stored;
+      return "dark";
+    }
+
+    function applyTheme(theme) {
+      document.documentElement.dataset.theme = theme;
+      localStorage.setItem(STORAGE_KEY, theme);
+      var meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute("content", META_COLORS[theme]);
+      syncThemeSwitcher();
+      window.dispatchEvent(
+        new CustomEvent("ojekku-theme-change", { detail: { theme: theme } })
+      );
+    }
+
+    function syncThemeSwitcher() {
+      var theme = document.documentElement.dataset.theme || "dark";
+      document.querySelectorAll("[data-theme-set]").forEach(function (btn) {
+        var value = btn.getAttribute("data-theme-set");
+        var active = value === theme;
+        btn.classList.toggle("theme-switcher__btn--active", active);
+        btn.setAttribute("aria-pressed", active ? "true" : "false");
+      });
+    }
+
+    if (!window.__ojekkuThemeInit) {
+      window.__ojekkuThemeInit = true;
+      applyTheme(resolveTheme());
+      document.addEventListener("click", function (e) {
+        var btn = e.target.closest("[data-theme-set]");
+        if (!btn) return;
+        var next = btn.getAttribute("data-theme-set");
+        if (next === "light" || next === "dark") applyTheme(next);
+      });
+    } else {
+      syncThemeSwitcher();
+    }
+  })();
+</script>

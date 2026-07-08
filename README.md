@@ -1,64 +1,77 @@
-# [Astro](https://astro.build) Blog Template
+# Ojekku Blog
 
-[![Screenshot](screenshot.png)](https://astro-blog-template.netlify.app/)
+Blog perusahaan **Ojekku** — cerita membangun platform mobilitas berpusat pada driver, dimulai di Salatiga.
 
-## 👉 Check out the ✨ [Live Demo](https://astro-blog-template.netlify.app/) ✨
+**Live:** [blog.ojekku.com](https://blog.ojekku.com)
 
-## 👩‍🚀 Getting Started
+## Stack
 
-### Locally
+- [Astro](https://astro.build) 7
+- Bilingual markdown content collections (`src/content/blog/`)
+- Locale routing (`/id/`, `/en/`)
+- Pagination, [Pagefind](https://pagefind.app/) search
+- Dark/light theme, SEO meta + Open Graph
+- Vitest + Playwright
 
-```
-pnpm init astro -- --template Charca/astro-blog-template
-```
+## Development
 
-### On StackBlitz
-
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/charca/astro-blog-template)
-
-## ✨ Features:
-
-- ✅ Astro 4.0
-- ✅ Dark Mode
-- ✅ Full Markdown support
-- ✅ SEO-friendly setup with canonical URLs and OpenGraph data
-- ✅ RSS 2.0 generation
-- ✅ Sitemap.xml generation
-
-## 🚀 Project Structure
-
-Inside of your Astro project, you'll see the following folders and files:
-
-```
-/
-├── public/
-│   ├── robots.txt
-│   └── favicon.ico
-├── src/
-│   ├── components/
-│   │   └── Tour.astro
-│   └── pages/
-│       └── index.astro
-└── package.json
+```bash
+pnpm install
+cp .env.example .env   # set PUBLIC_BLOG_API_BASE as needed
+pnpm dev      # http://localhost:4321
+pnpm build    # includes Pagefind index
+pnpm preview
+pnpm test
+pnpm test:e2e
 ```
 
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
+## Menambah artikel
 
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
+```bash
+pnpm new-post "Judul artikel" url-slug
+```
 
-Any static assets, like images, can be placed in the `public/` directory.
+Membuat pasangan `.id.md` + `.en.md` di `src/content/blog/[year]/[month]/`. Lihat [`docs/content-structure.md`](docs/content-structure.md).
 
-## 🧞 Commands
+URL artikel: `/{locale}/blog/{slug}` (mis. `/id/blog/kenapa-ojekku-dimulai-di-salatiga`).
 
-All commands are run from the root of the project, from a terminal:
+## Cross-post ke Telegram
 
-| Command           | Action                                       |
-| :---------------- | :------------------------------------------- |
-| `pnpm install`     | Installs dependencies                        |
-| `pnpm dev`     | Starts local dev server at `localhost:3030`  |
-| `pnpm build`   | Build your production site to `./dist/`      |
-| `pnpm preview` | Preview your build locally, before deploying |
+Setelah artikel **live** di Netlify, kirim **isi penuh** ke channel [@ojekku_channel](https://t.me/ojekku_channel):
 
-## 👀 Want to learn more?
+```bash
+# .env: TELEGRAM_BOT_TOKEN, TELEGRAM_CHANNEL_ID=@ojekku_channel
+pnpm tg-sync
+pnpm tg-sync --dry-run
+pnpm tg-sync kenapa-ojekku-dimulai-di-salatiga
+pnpm tg-sync kenapa-ojekku-dimulai-di-salatiga --locale en
+```
 
-Feel free to check [Astro's documentation](https://github.com/withastro/astro) or jump into Astro's [Discord server](https://astro.build/chat).
+Tanpa slug, script memposting **semua** artikel non-draft locale `id` (urut `publishDate` naik).
+
+Script menulis `telegramUrl` dan `telegramMessageIds` ke frontmatter artikel. **Re-run** memperbarui pesan channel yang sudah ada (bukan post baru). Setiap artikel = **satu pesan teks** di channel; link blog ada di **baris pertama** sebagai anchor HTML. `coverImage` hanya untuk tampilan blog/OG, **tidak** dikirim ke Telegram. Body yang melebihi 4096 karakter dipotong dengan peringatan.
+
+**Engagement di blog:** read-only — komentar dan reaksi disinkronkan dari Telegram via blog-api (`GET .../telegram/messages/{id}/comments`). Halaman artikel memakai `telegramMessageIds[0]` dari frontmatter. CTA "Komentar di Telegram" mengarah ke channel; interaksi di channel + discussion group.
+
+**Setup sekali:** bot harus admin channel **dan** discussion group dengan izin baca pesan. blog-api perlu webhook + `Telegram:DefaultChannelId=@ojekku_channel` (lihat repo blog-api).
+
+## Deploy (Netlify)
+
+- Build command: `pnpm build`
+- Publish directory: `dist`
+- Custom domain: `blog.ojekku.com` (CNAME → Netlify)
+
+Konfigurasi ada di [`netlify.toml`](netlify.toml). Push ke `main` memicu deploy otomatis setelah repo terhubung ke Netlify.
+
+### Environment variables (Netlify)
+
+Lihat [`.env.example`](.env.example):
+
+- `PUBLIC_BLOG_API_BASE` — engagement API (Telegram comments/reactions mirror)
+- `PUBLIC_BLOG_SITE_ID` — `ojekku-blog`
+
+URL lama (`/blog/...`, `/about`) di-redirect ke locale Indonesia (`/id/blog`).
+
+## Visi perusahaan
+
+Konteks produk Ojekku: [`bangkit-project/AGENTS.md`](https://github.com/bangkit-project/bangkit-project/blob/main/AGENTS.md).

@@ -1,0 +1,10 @@
+---
+import { PUBLIC_LOCALES } from '../../lib/locale-path';
+
+export async function getStaticPaths() {
+  return PUBLIC_LOCALES.map((locale) => ({ params: { locale } }));
+}
+
+const { locale } = Astro.params;
+return Astro.redirect(`/${locale}/blog`);
+---

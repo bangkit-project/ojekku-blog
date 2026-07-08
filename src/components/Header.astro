@@ -1,27 +1,316 @@
 ---
 import Logo from './Logo.astro'
 import Nav from './Nav.astro'
+import { getLocalePath } from '../lib/locale-path';
+import { t, type Locale } from '../lib/translations';
 
-const { current = '' } = Astro.props;
+export interface Props {
+  headerTitle: string;
+  current?: string;
+  lang?: Locale;
+  titleVariant?: 'article' | 'default';
+  titleTag?: 'h1' | 'p';
+}
+
+const { headerTitle, current = '', lang = 'id', titleVariant = 'default', titleTag = 'h1' } = Astro.props;
+const titleClass = ['site-header__title', titleVariant === 'article' && 'site-header__title--article'];
+const blogHomeHref = getLocalePath(lang, 'blog');
 ---
 
 <style>
-  header {
-    display: flex;
+  .site-header {
+    border-bottom: 1px solid var(--color-border);
+    width: 100%;
+  }
+
+  .site-header__inner {
+    align-items: center;
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: auto 1fr auto;
     margin: 0 auto;
     max-width: 1400px;
     padding: 2em;
     width: 100%;
   }
 
+  .site-header__logo {
+    justify-self: start;
+  }
+
+  .site-header__title {
+    font-family: var(--font-family-sans);
+    font-size: 1.25rem;
+    font-weight: 700;
+    justify-self: start;
+    line-height: 1.2;
+    margin: 0;
+    text-align: left;
+  }
+
+  .site-header__title--article {
+    font-family: var(--font-family-serif);
+    font-size: clamp(1.35rem, 3.5vw, 2rem);
+    font-weight: 700;
+    line-height: 1.15;
+  }
+
+  .site-header__title-link {
+    color: inherit;
+    text-decoration: none;
+    box-shadow: none;
+    background: none;
+  }
+
+  .site-header__title-link:hover {
+    color: var(--color-accent);
+    box-shadow: none;
+    background: none;
+  }
+
+  .site-header__title-link:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+
+  .site-header__nav {
+    justify-self: end;
+  }
+
+  .site-header__menu-btn {
+    display: none;
+  }
+
+  .site-header__menu {
+    display: none;
+  }
+
   @media screen and (max-width: 520px) {
-    header {
-      padding: 2em 0;
+    .site-header__inner {
+      gap: 0.75rem;
+      grid-template-columns: auto 1fr auto;
+      padding: 1.25em 0;
+    }
+
+    .site-header__nav--desktop {
+      display: none;
+    }
+
+    .site-header__logo {
+      grid-column: 1;
+    }
+
+    .site-header__logo :global(img) {
+      height: 32px;
+    }
+
+    .site-header__title {
+      font-size: 1rem;
+      grid-column: 2;
+    }
+
+    .site-header__title--article {
+      font-size: clamp(1.15rem, 4vw, 1.5rem);
+      line-height: 1.15;
+    }
+
+    .site-header__menu-btn {
+      align-items: center;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 999px;
+      color: var(--color-muted);
+      cursor: pointer;
+      display: inline-flex;
+      grid-column: 3;
+      justify-content: center;
+      justify-self: end;
+      padding: 0.55rem 0.65rem;
+    }
+
+    .site-header__menu-btn:hover {
+      color: var(--color-text);
+    }
+
+    .site-header__menu-btn:focus-visible {
+      outline: 2px solid var(--color-accent);
+      outline-offset: 2px;
+    }
+
+    .site-header__menu-btn-icon {
+      display: block;
+      height: 1rem;
+      width: 1rem;
+    }
+
+    .site-header__menu-btn-icon--close {
+      display: none;
+    }
+
+    .site-header__menu-btn[aria-expanded="true"] .site-header__menu-btn-icon--open {
+      display: none;
+    }
+
+    .site-header__menu-btn[aria-expanded="true"] .site-header__menu-btn-icon--close {
+      display: block;
+    }
+
+    .site-header__menu:not([hidden]) {
+      border-bottom: 1px solid var(--color-border);
+      display: flex;
+      justify-content: center;
+      margin: 0 auto;
+      max-width: 1400px;
+      padding: 0.75rem 0 1rem;
+      width: 100%;
+    }
+
+    .site-header__menu :global(nav) {
+      justify-content: center;
+    }
+
+    .site-header__menu :global(.nav-chrome) {
+      align-items: center;
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      justify-content: center;
+      margin-left: 0;
+      width: auto;
     }
   }
 </style>
 
-<header>
-  <Logo />
-  <Nav current={current} />
+<header class="site-header">
+  <div class="site-header__inner">
+    <div class="site-header__logo">
+      <Logo lang={lang} />
+    </div>
+    {titleTag === 'h1' ? (
+      <h1 class:list={titleClass}>
+        <a class="site-header__title-link" href={blogHomeHref}>{headerTitle}</a>
+      </h1>
+    ) : (
+      <p class:list={titleClass}>
+        <a class="site-header__title-link" href={blogHomeHref}>{headerTitle}</a>
+      </p>
+    )}
+    <div class="site-header__nav site-header__nav--desktop">
+      <Nav current={current} lang={lang} />
+    </div>
+    <button
+      type="button"
+      class="site-header__menu-btn"
+      aria-controls="site-header-menu"
+      aria-expanded="false"
+      aria-label={t('menuLabel', lang)}
+      data-menu-label={t('menuLabel', lang)}
+      data-menu-close-label={t('menuCloseLabel', lang)}
+    >
+      <svg
+        class="site-header__menu-btn-icon site-header__menu-btn-icon--open"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M4 6h16"></path>
+        <path d="M4 12h16"></path>
+        <path d="M4 18h16"></path>
+      </svg>
+      <svg
+        class="site-header__menu-btn-icon site-header__menu-btn-icon--close"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M18 6L6 18"></path>
+        <path d="M6 6l12 12"></path>
+      </svg>
+    </button>
+  </div>
+
+  <div id="site-header-menu" class="site-header__menu" hidden>
+    <Nav current={current} lang={lang} />
+  </div>
 </header>
+
+<script>
+  let menuAbort: AbortController | undefined;
+
+  function initSiteHeaderMenu() {
+    const header = document.querySelector('.site-header');
+    const button = header?.querySelector('.site-header__menu-btn');
+    const panel = document.getElementById('site-header-menu');
+    if (!(header instanceof HTMLElement) || !(button instanceof HTMLButtonElement) || !(panel instanceof HTMLElement)) {
+      return;
+    }
+
+    const menuPanel = panel;
+    const menuButton = button;
+
+    menuAbort?.abort();
+    menuAbort = new AbortController();
+    const { signal } = menuAbort;
+
+    const mobileQuery = window.matchMedia('(max-width: 520px)');
+
+    const menuOpenLabel = menuButton.dataset.menuLabel ?? 'Menu';
+    const menuCloseLabel = menuButton.dataset.menuCloseLabel ?? 'Close menu';
+
+    function closeMenu() {
+      menuPanel.hidden = true;
+      menuButton.setAttribute('aria-expanded', 'false');
+      menuButton.setAttribute('aria-label', menuOpenLabel);
+    }
+
+    function openMenu() {
+      menuPanel.hidden = false;
+      menuButton.setAttribute('aria-expanded', 'true');
+      menuButton.setAttribute('aria-label', menuCloseLabel);
+    }
+
+    function toggleMenu() {
+      if (menuPanel.hidden) openMenu();
+      else closeMenu();
+    }
+
+    menuButton.addEventListener('click', toggleMenu, { signal });
+
+    menuPanel.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      if (target.closest('.theme-switcher, .font-size-toggle')) return;
+      if (target.closest('a')) closeMenu();
+    }, { signal });
+
+    document.addEventListener('click', (event) => {
+      if (menuPanel.hidden || !mobileQuery.matches) return;
+      const target = event.target;
+      if (!(target instanceof Element)) return;
+      if (menuButton.contains(target)) return;
+      if (menuPanel.contains(target)) return;
+      closeMenu();
+    }, { signal });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') closeMenu();
+    }, { signal });
+
+    mobileQuery.addEventListener('change', (event) => {
+      if (!event.matches) closeMenu();
+    }, { signal });
+  }
+
+  initSiteHeaderMenu();
+  document.addEventListener('astro:page-load', initSiteHeaderMenu);
+</script>

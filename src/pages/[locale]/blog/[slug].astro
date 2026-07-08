@@ -1,0 +1,210 @@
+---
+import { getCollection, getEntry, render } from 'astro:content';
+import { getBlogEntryId, parseBlogEntryId, type BlogData } from '../../../content.config';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import CoverImage from '../../../components/CoverImage.astro';
+import Pagination from '../../../components/Pagination.astro';
+import Bio from '../../../components/Bio.astro';
+import { getReadingTimeMinutes, formatReadingTime } from '../../../lib/reading-time';
+import { t, tBlogHeaderTitle } from '../../../lib/translations';
+import AuthorByline from '../../../components/AuthorByline.astro';
+import CommentSection from '../../../components/CommentSection.astro';
+import PostEngagementPills from '../../../components/PostEngagementPills.astro';
+import TelegramJoinDialog from '../../../components/TelegramJoinDialog.astro';
+import { getIdEquivalentPath, PUBLIC_LOCALES } from '../../../lib/locale-path';
+import type { Locale } from '../../../lib/translations';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('blog', ({ data }) => !data.draft);
+  const paths: { params: { locale: string; slug: string } }[] = [];
+  for (const entry of entries) {
+    const parsed = parseBlogEntryId(entry.id);
+    if (!parsed || parsed.lang !== 'id') continue;
+    paths.push({ params: { locale: parsed.lang, slug: parsed.slug } });
+  }
+  return paths;
+}
+
+const { locale, slug } = Astro.params as { locale: string; slug: string };
+if (locale === 'en') return Astro.redirect(getIdEquivalentPath(Astro.url));
+if (!PUBLIC_LOCALES.includes(locale as Locale)) return Astro.redirect('/id/blog');
+const lang = locale as Locale;
+
+if (!slug) return Astro.redirect(`/${lang}/blog`);
+
+const entry = await getEntry('blog', getBlogEntryId(slug, lang));
+if (!entry || (entry.data as BlogData).draft) return Astro.redirect(`/${lang}/blog`);
+
+const allEntries = await getCollection('blog', ({ data }) => !data.draft);
+const sameLocaleEntries = allEntries
+  .filter((e) => e.id.endsWith(`--${lang}`))
+  .sort(
+    (a, b) =>
+      (b.data as BlogData).publishDate.getTime() - (a.data as BlogData).publishDate.getTime(),
+  );
+
+const currentIndex = sameLocaleEntries.findIndex((e) => e.id === entry.id);
+const newerEntry = currentIndex > 0 ? sameLocaleEntries[currentIndex - 1] : undefined;
+const olderEntry =
+  currentIndex >= 0 && currentIndex < sameLocaleEntries.length - 1
+    ? sameLocaleEntries[currentIndex + 1]
+    : undefined;
+
+const newerParsed = newerEntry ? parseBlogEntryId(newerEntry.id) : null;
+const olderParsed = olderEntry ? parseBlogEntryId(olderEntry.id) : null;
+const newerSlug = newerParsed?.slug;
+const olderSlug = olderParsed?.slug;
+
+const { Content } = await render(entry);
+const data = entry.data as BlogData;
+const newerData = newerEntry ? (newerEntry.data as BlogData) : undefined;
+const olderData = olderEntry ? (olderEntry.data as BlogData) : undefined;
+const readingTime = getReadingTimeMinutes(entry.body ?? '');
+const dateLocale = lang === 'en' ? 'en-US' : 'id-ID';
+const permalink = `${Astro.site?.href ?? ''}${lang}/blog/${slug}`;
+const channelMessageId = data.telegramMessageIds?.[0];
+---
+
+<BaseLayout
+  title={data.title}
+  description={data.description}
+  headerTitle={tBlogHeaderTitle(lang)}
+  permalink={permalink}
+  current="blog"
+  lang={lang}
+  pageKind="article"
+>
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const from = params.get('from');
+    const slugEl = document.getElementById('back-link')?.dataset.slug ?? '';
+    const anchor = slugEl ? `#post-${slugEl}` : '';
+    const pathname = window.location.pathname;
+    const localeMatch = pathname.match(/^\/(en|id)\//);
+    const base = localeMatch ? `/${localeMatch[1]}/blog` : '/id/blog';
+    const backLink = document.getElementById('back-link') as HTMLAnchorElement | null;
+    if (backLink) {
+      if (from) {
+        const n = parseInt(from, 10);
+        backLink.href = n > 1 ? `${base}/page/${n}${anchor}` : `${base}${anchor}`;
+      } else if (anchor) {
+        backLink.href = `${base}${anchor}`;
+      } else {
+        backLink.href = base;
+      }
+    }
+  </script>
+
+  <div class="container">
+    <article class="content" data-pagefind-body>
+      <div data-pagefind-filter={`locale:${lang}`}></div>
+      <header class="post-article-header">
+        <h1 class="post-article-title">{data.title}</h1>
+        {data.description && (
+          <p data-pagefind-meta="description">{data.description}</p>
+        )}
+      </header>
+
+      {data.authorId && (
+        <AuthorByline authorId={data.authorId} variant="article">
+          <span slot="meta">
+            <time datetime={data.publishDate.toISOString()}>
+              {data.publishDate.toLocaleDateString(dateLocale, {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
+            </time>
+            {' · '}
+            <span>{formatReadingTime(readingTime, lang)}</span>
+          </span>
+        </AuthorByline>
+      )}
+
+      {channelMessageId && (
+        <PostEngagementPills
+          channelMessageId={channelMessageId}
+          lang={lang}
+          detailed
+          telegramUrl={data.telegramUrl}
+        />
+      )}
+
+      {data.coverImage && (
+        <div class="article-cover">
+          <CoverImage src={data.coverImage} alt={data.title} width={800} height={400} eager={true} />
+        </div>
+      )}
+
+      {data.tags && data.tags.length > 0 && (
+        <div class="sr-only" aria-hidden="true">
+          {data.tags.map((tag) => (
+            <span data-pagefind-filter="tag">{tag}</span>
+          ))}
+        </div>
+      )}
+
+      <Content />
+
+      {data.telegramUrl && <TelegramJoinDialog lang={lang} />}
+
+      {data.telegramUrl && data.telegramMessageIds?.[0] && (
+        <CommentSection
+          channelMessageId={data.telegramMessageIds[0]}
+          lang={lang}
+          telegramUrl={data.telegramUrl}
+        />
+      )}
+
+      {(newerSlug || olderSlug) && (
+        <nav class="post-nav">
+          <Pagination show={true}>
+            {newerSlug && (
+              <a slot="prev" href={`/${lang}/blog/${newerSlug}`} class="pagination-btn">
+                <span class="sr-only">{t('previous', lang)}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M15 18l-6-6 6-6" />
+                </svg>
+              </a>
+            )}
+            <a href={`/${lang}/blog`} id="back-link" data-slug={slug} class="pagination-btn">
+              <span class="sr-only">{t('backToBlog', lang)}</span>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M3 11L12 3l9 8" />
+                <path d="M5 10v10h14V10" />
+              </svg>
+            </a>
+            {olderSlug && (
+              <a slot="next" href={`/${lang}/blog/${olderSlug}`} class="pagination-btn">
+                <span class="sr-only">{t('next', lang)}</span>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M9 6l6 6-6 6" />
+                </svg>
+              </a>
+            )}
+          </Pagination>
+          {(newerSlug || olderSlug) && (
+            <div class="post-nav-titles">
+              <span>{newerData?.title ?? ''}</span>
+              <span>{olderData?.title ?? ''}</span>
+            </div>
+          )}
+        </nav>
+      )}
+
+      <hr />
+      <Bio lang={lang} />
+    </article>
+  </div>
+</BaseLayout>
+
+<style>
+  .article-cover {
+    margin: 0 0 2rem;
+  }
+
+  .article-cover :global(.cover-image) {
+    border-radius: 4px;
+    width: 100%;
+  }
+</style>

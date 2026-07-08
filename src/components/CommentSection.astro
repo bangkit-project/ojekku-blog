@@ -1,0 +1,344 @@
+---
+import type { Locale } from '../lib/translations';
+import CommenterAvatar from './CommenterAvatar.astro';
+
+interface Props {
+  channelMessageId: number;
+  lang: Locale;
+  telegramUrl: string;
+}
+
+const { channelMessageId, lang, telegramUrl } = Astro.props;
+
+const labels = {
+  title: lang === 'id' ? 'Komentar' : 'Comments',
+  cta: lang === 'id' ? 'Kirim Komentar' : 'Send comment',
+  loading: lang === 'id' ? 'Memuat komentar…' : 'Loading comments…',
+  loadingReplies: lang === 'id' ? 'Memuat balasan…' : 'Loading replies…',
+  error: lang === 'id' ? 'Gagal memuat komentar.' : 'Failed to load comments.',
+  loadMore: lang === 'id' ? 'Lihat komentar lain' : 'Load more comments',
+  hideReplies: lang === 'id' ? 'Sembunyikan balasan' : 'Hide replies',
+};
+---
+
+<section
+  id="comments"
+  class="comment-section"
+  data-comment-section
+  data-channel-message-id={channelMessageId}
+  data-lang={lang}
+  data-telegram-url={telegramUrl}
+>
+  <p class="post-list-meta post-list-engagement comment-reactions" data-comment-reactions data-telegram-url={telegramUrl} hidden></p>
+  <h2 class="comment-section__title" data-comment-heading>{labels.title}</h2>
+
+  <p class="comment-section__status" data-comment-status hidden>{labels.loading}</p>
+  <ul class="comment-list" data-comment-list></ul>
+  <button type="button" class="comment-section__load-more comment-flat-button" data-comment-load-more hidden>
+    {labels.loadMore}
+  </button>
+  <p class="comment-section__error" data-comment-error hidden>{labels.error}</p>
+
+  <p class="comment-section__cta">
+    <button type="button" class="comment-telegram-cta" data-telegram-join-trigger>
+      {labels.cta}
+    </button>
+  </p>
+
+  <CommenterAvatar />
+</section>
+
+<script>
+  import { COMMENT_AVATAR_SIZE } from '../lib/avatarImage';
+  import {
+    fetchCommentReplies,
+    fetchComments,
+    fetchEngagement,
+    formatCommentSectionHeading,
+    formatCommentDate,
+    formatDeletedCommentLabel,
+    formatReplyCountLabel,
+    renderTelegramReactionChips,
+    resolveCommentAvatarUrl,
+  } from '../lib/blogEngagement.client';
+  import type { BlogComment } from '../lib/blogEngagement.client';
+
+  function initCommentSection(root: HTMLElement) {
+    const rawMessageId = root.dataset.channelMessageId;
+    const channelMessageId = rawMessageId ? Number(rawMessageId) : NaN;
+    const lang = root.dataset.lang || 'id';
+    if (!Number.isInteger(channelMessageId) || channelMessageId <= 0) return;
+
+    const statusEl = root.querySelector<HTMLElement>('[data-comment-status]');
+    const listEl = root.querySelector<HTMLElement>('[data-comment-list]');
+    const loadMoreEl = root.querySelector<HTMLButtonElement>('[data-comment-load-more]');
+    const errorEl = root.querySelector<HTMLElement>('[data-comment-error]');
+    const reactionsEl = root.querySelector<HTMLElement>('[data-comment-reactions]');
+    const headingEl = root.querySelector<HTMLElement>('[data-comment-heading]');
+
+    let currentPage = 1;
+    let totalRoots = 0;
+
+    const labels = {
+      loadingReplies: lang === 'id' ? 'Memuat balasan…' : 'Loading replies…',
+      hideReplies: lang === 'id' ? 'Sembunyikan balasan' : 'Hide replies',
+    };
+
+    const setVisible = (el: HTMLElement | null, visible: boolean) => {
+      if (!el) return;
+      el.hidden = !visible;
+    };
+
+    const updateHeading = (count: number) => {
+      if (!headingEl) return;
+      headingEl.textContent = formatCommentSectionHeading(count, lang === 'en' ? 'en' : 'id');
+    };
+
+    const createReplyToggle = (
+      comment: BlogComment,
+      onToggle: (expanded: boolean) => Promise<boolean>,
+    ) => {
+      const replyCount = comment.replyCount ?? 0;
+      if (replyCount <= 0 || comment.telegramMessageId == null) return null;
+
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'comment-flat-button comment-item__replies-toggle';
+      button.textContent = formatReplyCountLabel(replyCount, lang);
+      button.dataset.expanded = 'false';
+
+      let expanded = false;
+      button.addEventListener('click', async () => {
+        if (expanded) {
+          expanded = false;
+          button.dataset.expanded = 'false';
+          button.textContent = formatReplyCountLabel(replyCount, lang);
+          await onToggle(false);
+          return;
+        }
+
+        button.disabled = true;
+        button.textContent = labels.loadingReplies;
+        const loaded = await onToggle(true);
+        if (loaded) {
+          expanded = true;
+          button.dataset.expanded = 'true';
+          button.textContent = labels.hideReplies;
+        } else {
+          button.textContent = formatReplyCountLabel(replyCount, lang);
+        }
+        button.disabled = false;
+      });
+
+      return button;
+    };
+
+    const renderCommentItem = (comment: BlogComment, depth: number): HTMLLIElement => {
+      const isDeleted = Boolean(comment.deletedAt);
+      const li = document.createElement('li');
+      li.className = isDeleted ? 'comment-item comment-item--deleted' : 'comment-item';
+      li.dataset.commentId = comment.id;
+      if (comment.telegramMessageId != null) {
+        li.dataset.telegramMessageId = String(comment.telegramMessageId);
+      }
+      const visualDepth = Math.min(depth, 4);
+      li.style.setProperty('--comment-depth', String(visualDepth));
+
+      const name = comment.authorDisplayName || comment.authorUsername || 'Telegram';
+      const avatar = resolveCommentAvatarUrl(comment);
+      li.innerHTML = `
+        <div class="comment-item__header">
+          <strong class="comment-item__author">${name}</strong>
+          <span class="comment-item__separator" aria-hidden="true">·</span>
+          <time datetime="${comment.createdAt}">${formatCommentDate(comment.createdAt, lang)}</time>
+        </div>
+        <div class="comment-item__main">
+          <p class="comment-item__body"></p>
+        </div>
+      `;
+      const avatarEl = document.createElement('commenter-avatar');
+      avatarEl.setAttribute('src', avatar);
+      avatarEl.setAttribute('alt', name);
+      avatarEl.setAttribute('width', String(COMMENT_AVATAR_SIZE));
+      avatarEl.setAttribute('height', String(COMMENT_AVATAR_SIZE));
+      avatarEl.setAttribute('class', 'comment-item__avatar');
+      li.insertBefore(avatarEl, li.firstChild);
+      const mainEl = li.querySelector<HTMLElement>('.comment-item__main');
+      const bodyEl = li.querySelector<HTMLElement>('.comment-item__body');
+      if (bodyEl) {
+        bodyEl.textContent = isDeleted ? formatDeletedCommentLabel(lang) : comment.body;
+      }
+
+      const repliesContainer = document.createElement('div');
+      repliesContainer.className = 'comment-item__replies';
+      repliesContainer.hidden = true;
+
+      const childList = document.createElement('ul');
+      childList.className = 'comment-list comment-list--nested';
+      repliesContainer.appendChild(childList);
+
+      const toggle = createReplyToggle(comment, async (expanded) => {
+        if (!expanded) {
+          repliesContainer.hidden = true;
+          childList.innerHTML = '';
+          return true;
+        }
+
+        if (comment.telegramMessageId == null) return false;
+        const data = await fetchCommentReplies(channelMessageId, comment.telegramMessageId);
+        childList.innerHTML = '';
+        if (!data) return false;
+
+        for (const reply of data.items) {
+          childList.appendChild(renderCommentItem(reply, depth + 1));
+        }
+        repliesContainer.hidden = data.items.length === 0;
+        return true;
+      });
+
+      if (toggle && mainEl) {
+        mainEl.appendChild(toggle);
+        mainEl.appendChild(repliesContainer);
+      }
+
+      return li;
+    };
+
+    const renderRoots = (items: BlogComment[], append: boolean) => {
+      if (!listEl) return;
+      if (!append) listEl.innerHTML = '';
+      for (const comment of items) {
+        listEl.appendChild(renderCommentItem(comment, 0));
+      }
+    };
+
+    const updateLoadMore = () => {
+      if (!loadMoreEl || !listEl) return;
+      const loaded = listEl.children.length;
+      const hasMore = loaded > 0 && loaded < totalRoots;
+      setVisible(loadMoreEl, hasMore);
+    };
+
+    const loadEngagement = async () => {
+      const data = await fetchEngagement(channelMessageId);
+      if (data && reactionsEl) {
+        renderTelegramReactionChips(reactionsEl, data.telegramReactions, { interactive: true });
+        setVisible(reactionsEl, true);
+      }
+      const count = data?.telegramCommentCount ?? data?.commentCount ?? 0;
+      updateHeading(count);
+    };
+
+    const loadComments = async (page = 1, append = false) => {
+      if (page === 1) {
+        setVisible(statusEl, true);
+        setVisible(errorEl, false);
+      }
+      const data = await fetchComments(channelMessageId, page);
+      if (page === 1) setVisible(statusEl, false);
+      if (!data) {
+        if (page === 1) setVisible(errorEl, true);
+        if (page > 1) setVisible(loadMoreEl, false);
+        return;
+      }
+
+      if (append && data.items.length === 0) {
+        setVisible(loadMoreEl, false);
+        return;
+      }
+
+      currentPage = data.page;
+      totalRoots = data.totalCount;
+      renderRoots(data.items, append);
+      updateHeading(totalRoots);
+      updateLoadMore();
+    };
+
+    loadMoreEl?.addEventListener('click', () => {
+      void loadComments(currentPage + 1, true);
+    });
+
+    void loadEngagement();
+    void loadComments();
+  }
+
+  function initAll() {
+    document.querySelectorAll<HTMLElement>('[data-comment-section]').forEach(initCommentSection);
+  }
+
+  initAll();
+  document.addEventListener('astro:page-load', initAll);
+</script>
+
+<style>
+  .comment-section {
+    margin: 2.5rem 0 0;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border-color, #e5e5e5);
+  }
+
+  .comment-section__title {
+    font-size: 1.25rem;
+    margin: 0 0 1rem;
+  }
+
+  .comment-reactions {
+    margin-bottom: 1.5rem;
+  }
+
+  .comment-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 1.5rem;
+    display: grid;
+    gap: 1rem;
+  }
+
+  .comment-list--nested {
+    margin: 0.75rem 0 0;
+    padding-left: calc(var(--comment-depth, 1) * 1rem);
+    border-left: 2px solid var(--border-color, #e5e5e5);
+  }
+
+  .comment-section__load-more[hidden] {
+    display: none;
+  }
+
+  .comment-section__load-more {
+    display: inline-block;
+    margin: 0 0 1.5rem;
+  }
+
+  .comment-section__cta {
+    margin: 0;
+  }
+
+  .comment-telegram-cta {
+    display: inline-block;
+    font: inherit;
+    font-weight: 600;
+    padding: 0.6rem 1.1rem;
+    border-radius: 4px;
+    border: 1px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text);
+    text-decoration: none;
+    cursor: pointer;
+    appearance: none;
+  }
+
+  .comment-telegram-cta:hover {
+    text-decoration: none;
+    border-color: var(--color-muted);
+  }
+
+  .comment-section__status,
+  .comment-section__error {
+    color: var(--text-muted, #666);
+    font-size: 0.95rem;
+  }
+
+  .comment-section__error {
+    color: #b00020;
+  }
+</style>
