@@ -7,13 +7,13 @@ publishDate: "2026-07-03T09:43:32"
 draft: false
 authorId: andri.ys.st@gmail.com
 # Optional fields:
-tags: ["Visi dan misi"]
+tags: []
 coverImage: "/assets/blog/kenapa-ojekku-dibangun-cover.svg"
 # updatedDate: ""
 # telegramUrl: ""          # set by pnpm tg-sync
 # telegramMessageIds: []   # set by pnpm tg-sync
-telegramUrl: "https://t.me/ojekku_channel/31"
-telegramMessageIds: [31]
+telegramUrl: "https://t.me/ojekku_channel/33"
+telegramMessageIds: [33]
 ---
 ## Aplikasi ojol lagi?
 
@@ -21,7 +21,7 @@ Mendengar nama "Ojekku", langsung terbayang kalau ini adalah sebuah sistem untuk
 
 Pertanyaannya, bukankah sudah banyak sistem semacam itu? Benarkah masih ada tempat untuk satu sistem lagi yang sejenis itu? Apa bedanya Ojekku dengan sistem sejenis yang sudah berjalan? Itu adalah beberapa pertanyaan yang sering muncul ketika mendengar rencana kami untuk membangun sistem Ojekku ini.
 
-Hasil pencarian kami (salah satunya [artikel ini](https://katadata.co.id/digital/startup/684156b8c225f/daftar-aplikasi-ojol-yang-pernah-ada-di-indonesia-selain-grab-gojek-dan-maxim)) menunjukkan sudah banyak inisiatif serupa. Ada beberapa yang masih bertahan, tapi banyak juga yang sudah tumbang. Jadi kenapa masih nekat membangun Ojekku?
+Hasil pencarian kami (salah satunya [artikel ini](https://katadata.co.id/digital/startup/684156b8c225f/daftar-aplikasi-ojol-yang-pernah-ada-di-indonesia-selain-grab-gojek-dan-maxim)) menunjukkan sudah banyak inisiatif serupa. Ada beberapa yang masih bertahan, tapi banyak juga yang sudah tumbang. Jadi mengapa masih nekat membangun Ojekku?
 
 Alasan pertama sebenarnya sangat personal. Saya adalah seorang penggemar otomotif, dan menurut saya mengendarai kendaraan, baik itu motor maupun mobil, adalah pengalaman yang secara umum menyenangkan. Ya, saya suka menyetir. Dan tentu akan lebih menyenangkan kalau bisa mendapatkan penghasilan ekstra dari sana, bukan? Dan saya memang pernah berusaha mendaftar (dan diterima) sebagai driver di beberapa aplikasi ojol, meski sampai sekarang belum pernah mengambil orderan.
 
@@ -29,16 +29,16 @@ Alasan pertama sebenarnya sangat personal. Saya adalah seorang penggemar otomoti
 
 Salah satu alasan saya enggan mengambil orderan adalah karena menurut saya terlalu banyak peraturan yang absurd bagi seorang driver.
 
-Misalnya tentang penggunaan atribut. Seorang driver akan dihukum kalau tidak menggunakan atribut sesuai aplikasinya (potongan lebih tinggi, sulit mendapat orderan, dan semacamnya). Dan seringnya, atribut itu pun harus beli sendiri. Dan sebelum bisa mengambil orderan, seorang driver ternyata harus menyetor deposit sejumlah uang terlebih dahulu. Padahal driver sudah berbaik hati menyediakan kendaraan dan tenaganya untuk melayani customer mereka, kenapa harus dipersulit seperti itu?
+Misalnya tentang penggunaan atribut. Seorang driver akan dihukum kalau tidak menggunakan atribut sesuai aplikasinya (potongan lebih tinggi, sulit mendapat orderan, dan semacamnya). Dan seringnya atribut itu pun harus beli sendiri. Dan sebelum bisa mengambil orderan, seorang driver ternyata harus menyetor deposit terlebih dahulu. Padahal driver sudah berbaik hati menyediakan kendaraan dan tenaganya untuk melayani pelanggan mereka, mengapa harus dipersulit seperti itu?
 
-Dugaan kami, jawabannya adalah : dengan model begitu saja masih banyak calon driver yang bersedia, jadi kalau ada yang rewel (seperti saya), akan sangat mudah mencari penggantinya. Atau bisa jadi jumlah driver memang sudah terlalu banyak sehingga mekanisme semacam ini memang diperlukan sebagai semacam proses seleksi alamiah. Intinya posisi tawar driver sangat lemah dalam hal ini.
+Dugaan kami, jawabannya adalah: dengan model begitu saja masih banyak calon driver yang bersedia, jadi kalau ada yang rewel (seperti saya), akan sangat mudah mencari penggantinya. Atau bisa jadi jumlah driver memang sudah terlalu banyak sehingga mekanisme semacam ini memang diperlukan sebagai semacam proses seleksi alamiah. Intinya posisi tawar driver sangat lemah dalam hal ini.
 
-Dugaan kami semakin menguat ketika menyimak beberapa diskusi tentang dunia ojol, di mana jika ada driver mengeluh tentang sistem yang diterapkan aplikator, respon yang diterima biasanya : kalau memang keberatan, putus mitra saja, cari aplikasi lain, atau buat aplikasi sendiri. Di sinilah kami menyadari perlunya membangun platform alternatif yang meski fiturnya mungkin sama, tetapi dijalankan dengan cara yang berbeda dari yang sudah ada.
+Dugaan kami semakin menguat ketika menyimak beberapa diskusi tentang dunia ojol, di mana jika ada driver mengeluh tentang sistem yang diterapkan aplikator, respon yang diterima biasanya: kalau memang keberatan, putus mitra saja, cari aplikasi lain, atau buat aplikasi sendiri. Di sinilah kami menyadari perlunya membangun platform alternatif yang meski fiturnya mungkin sama, tetapi dijalankan dengan cara yang berbeda dari yang sudah ada.
 
 Jadi kesimpulannya, Ojekku ini dibangun berawal dari pengamatan kami bahwa ada sesuatu yang tidak beres dengan sistem yang sudah ada sekarang. Yang disampaikan di tulisan ini hanya sebagian kecil saja, masih ada banyak contoh lain yang akan kita bahas di tulisan selanjutnya.
 
 ## Yakin lebih baik dari yang lain?
 
-Lalu bagaimana Ojekku akan berbeda dari yang lain? Jangan jangan sistem Ojekku pun akan sama saja dengan yang lainnya? Simak terus tulisan kami selanjutnya bila Anda tertarik dengan solusi yang kami tawarkan melalui Ojekku ini.
+Lalu, bagaimana Ojekku akan berbeda dari yang lain? Jangan-jangan sistem Ojekku pun akan sama saja dengan yang lainnya? Simak terus tulisan kami selanjutnya bila Anda tertarik dengan solusi yang kami tawarkan melalui Ojekku ini.
 
 Terima kasih sudah membaca. Jangan lupa tinggalkan komentar supaya kami tahu tanggapan Anda tentang inisiatif ini.

@@ -451,6 +451,11 @@ export function isStaleTelegramMessageError(description?: string): boolean {
   );
 }
 
+export function isUnchangedTelegramMessageError(description?: string): boolean {
+  if (!description) return false;
+  return description.toLowerCase().includes("message is not modified");
+}
+
 async function callTelegramApi(
   token: string,
   method: string,
@@ -662,6 +667,10 @@ export async function syncTelegramChunks(
         chunk,
       );
       if (result.ok) {
+        messageIds.push(existingId);
+        continue;
+      }
+      if (isUnchangedTelegramMessageError(result.description)) {
         messageIds.push(existingId);
         continue;
       }
