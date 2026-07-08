@@ -419,6 +419,13 @@ export function formatCommentCountLabel(count: number, lang: "id" | "en"): strin
   return `${count} komentar`;
 }
 
+export function formatCommentSectionHeading(count: number, lang: "id" | "en"): string {
+  if (count === 0) {
+    return lang === "en" ? "No comments yet" : "Belum ada komentar";
+  }
+  return formatCommentCountLabel(count, lang);
+}
+
 export interface DetailedPostEngagementDisplay {
   reactionEmojis: string[];
   reactionLabel: string;

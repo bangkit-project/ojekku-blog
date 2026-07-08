@@ -50,6 +50,15 @@ const translations = {
   },
   minReadOne: { en: "1 min read", id: "1 menit baca" },
   minRead: { en: "min read", id: "menit baca" },
+  bioLead: {
+    en: "is a driver-centric mobility platform. This blog documents how we're building it in the open.",
+    id: "adalah platform mobilitas yang berpusat pada driver. Blog ini menceritakan secara terbuka bagaimana kami membangun platform ini. Ibarat restoran, Anda bisa melihat dapurnya di sini.",
+  },
+  bioVisit: { en: "Visit", id: "Kunjungi" },
+  bioProductInfo: {
+    en: "for the latest product info.",
+    id: "untuk info produk terbaru.",
+  },
 } as const;
 
 type StringKey = Exclude<keyof typeof translations, "pageOf">;

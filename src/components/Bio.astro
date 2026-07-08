@@ -1,8 +1,16 @@
+---
+import { t, type Locale } from '../lib/translations';
+
+interface Props {
+  lang: Locale;
+}
+
+const { lang } = Astro.props;
+---
+
 <div>
   <p>
-    <strong>Ojekku</strong> adalah platform mobilitas berpusat pada driver — dimulai di Salatiga.
-    Blog ini menceritakan proses membangunnya secara terbuka.
-    Kunjungi <a href="https://ojekku.com">ojekku.com</a> untuk info produk terbaru.
+    <strong>Ojekku.com</strong> {t('bioLead', lang)}
   </p>
 </div>
 

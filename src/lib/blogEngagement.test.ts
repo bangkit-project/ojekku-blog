@@ -6,6 +6,7 @@ import {
   buildLoginUrl,
   fetchBulkEngagement,
   formatCommentCountLabel,
+  formatCommentSectionHeading,
   formatCommentDate,
   formatDeletedCommentLabel,
   formatDetailedPostEngagement,
@@ -19,6 +20,7 @@ import {
   renderTelegramReactionChips,
   resolveCommentAvatarUrl,
   sumReactionCounts,
+  type TelegramReaction,
 } from "./blogEngagement.client";
 
 describe("blogEngagement.client", () => {
@@ -245,6 +247,13 @@ describe("blogEngagement.client", () => {
     expect(formatCommentCountLabel(2, "en")).toBe("2 comments");
   });
 
+  it("formatCommentSectionHeading uses empty-state text at zero", () => {
+    expect(formatCommentSectionHeading(0, "id")).toBe("Belum ada komentar");
+    expect(formatCommentSectionHeading(0, "en")).toBe("No comments yet");
+    expect(formatCommentSectionHeading(1, "id")).toBe("1 komentar");
+    expect(formatCommentSectionHeading(5, "en")).toBe("5 comments");
+  });
+
   it("formatDetailedPostEngagement uses heart when zero reactions", () => {
     expect(
       formatDetailedPostEngagement(
@@ -330,7 +339,8 @@ describe("blogEngagement.client", () => {
   });
 
   it("renderTelegramReactionChips shows heart zero pill for empty or undefined reactions", () => {
-    for (const reactions of [undefined, []] as const) {
+    const cases: Array<TelegramReaction[] | undefined> = [undefined, []];
+    for (const reactions of cases) {
       const el = document.createElement("div");
       renderTelegramReactionChips(el, reactions);
 

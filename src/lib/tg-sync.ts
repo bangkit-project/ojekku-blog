@@ -207,11 +207,6 @@ function inlineMarkdownToHtml(text: string): string {
   });
 }
 
-export function buildBlogArticleLink(postUrl: string, title: string): string {
-  const escapedUrl = escapeHtml(postUrl);
-  return `<b><a href="${escapedUrl}">${escapeHtml(title)}</a></b>`;
-}
-
 export type TelegramChunksResult = {
   chunks: string[];
   truncated: boolean;
@@ -223,14 +218,17 @@ export function buildTelegramChunks(
   postUrl: string,
   maxLength = TELEGRAM_MAX_MESSAGE_LENGTH,
 ): TelegramChunksResult {
-  const header = buildBlogArticleLink(postUrl, title);
+  const rawLink = escapeHtml(postUrl);
+  const separator = "\n\n---\n\n";
+  const titleBlock = `<b>${escapeHtml(title)}</b>`;
   const body = bodyHtml.trim();
-  const prefix = body ? `${header}\n\n` : header;
+  const articlePrefix = `${rawLink}${separator}${titleBlock}`;
 
   if (!body) {
-    return { chunks: [prefix.trimEnd()], truncated: false };
+    return { chunks: [articlePrefix], truncated: false };
   }
 
+  const prefix = `${articlePrefix}\n\n`;
   const fullText = `${prefix}${body}`;
   if (fullText.length <= maxLength) {
     return { chunks: [fullText], truncated: false };

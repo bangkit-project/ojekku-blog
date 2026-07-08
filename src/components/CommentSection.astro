@@ -15,7 +15,6 @@ const labels = {
   cta: lang === 'id' ? 'Kirim Komentar' : 'Send comment',
   loading: lang === 'id' ? 'Memuat komentar…' : 'Loading comments…',
   loadingReplies: lang === 'id' ? 'Memuat balasan…' : 'Loading replies…',
-  empty: lang === 'id' ? 'Belum ada komentar.' : 'No comments yet.',
   error: lang === 'id' ? 'Gagal memuat komentar.' : 'Failed to load comments.',
   loadMore: lang === 'id' ? 'Lihat komentar lain' : 'Load more comments',
   hideReplies: lang === 'id' ? 'Sembunyikan balasan' : 'Hide replies',
@@ -38,7 +37,6 @@ const labels = {
   <button type="button" class="comment-section__load-more comment-flat-button" data-comment-load-more hidden>
     {labels.loadMore}
   </button>
-  <p class="comment-section__empty" data-comment-empty hidden>{labels.empty}</p>
   <p class="comment-section__error" data-comment-error hidden>{labels.error}</p>
 
   <p class="comment-section__cta">
@@ -56,7 +54,7 @@ const labels = {
     fetchCommentReplies,
     fetchComments,
     fetchEngagement,
-    formatCommentCountLabel,
+    formatCommentSectionHeading,
     formatCommentDate,
     formatDeletedCommentLabel,
     formatReplyCountLabel,
@@ -74,7 +72,6 @@ const labels = {
     const statusEl = root.querySelector<HTMLElement>('[data-comment-status]');
     const listEl = root.querySelector<HTMLElement>('[data-comment-list]');
     const loadMoreEl = root.querySelector<HTMLButtonElement>('[data-comment-load-more]');
-    const emptyEl = root.querySelector<HTMLElement>('[data-comment-empty]');
     const errorEl = root.querySelector<HTMLElement>('[data-comment-error]');
     const reactionsEl = root.querySelector<HTMLElement>('[data-comment-reactions]');
     const headingEl = root.querySelector<HTMLElement>('[data-comment-heading]');
@@ -94,7 +91,7 @@ const labels = {
 
     const updateHeading = (count: number) => {
       if (!headingEl) return;
-      headingEl.textContent = formatCommentCountLabel(count, lang === 'en' ? 'en' : 'id');
+      headingEl.textContent = formatCommentSectionHeading(count, lang === 'en' ? 'en' : 'id');
     };
 
     const createReplyToggle = (
@@ -236,7 +233,6 @@ const labels = {
       if (page === 1) {
         setVisible(statusEl, true);
         setVisible(errorEl, false);
-        setVisible(emptyEl, false);
       }
       const data = await fetchComments(channelMessageId, page);
       if (page === 1) setVisible(statusEl, false);
@@ -254,7 +250,7 @@ const labels = {
       currentPage = data.page;
       totalRoots = data.totalCount;
       renderRoots(data.items, append);
-      setVisible(emptyEl, totalRoots === 0);
+      updateHeading(totalRoots);
       updateLoadMore();
     };
 
@@ -337,7 +333,6 @@ const labels = {
   }
 
   .comment-section__status,
-  .comment-section__empty,
   .comment-section__error {
     color: var(--text-muted, #666);
     font-size: 0.95rem;

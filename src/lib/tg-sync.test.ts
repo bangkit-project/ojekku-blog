@@ -170,7 +170,7 @@ Visit [ojekku.com](https://ojekku.com).`;
 describe("buildTelegramChunks", () => {
   const postUrl = "https://blog.ojekku.com/id/blog/judul";
 
-  it("uses the title as the first link anchor without a raw URL line", () => {
+  it("puts raw URL first, then separator, then bold title and body", () => {
     const { chunks, truncated } = buildTelegramChunks(
       "Judul",
       "Isi artikel.",
@@ -179,12 +179,10 @@ describe("buildTelegramChunks", () => {
 
     expect(truncated).toBe(false);
     expect(chunks).toEqual([
-      `<b><a href="${postUrl}">Judul</a></b>\n\nIsi artikel.`,
+      `${postUrl}\n\n---\n\n<b>Judul</b>\n\nIsi artikel.`,
     ]);
-    expect(chunks[0].startsWith(`<b><a href="${postUrl}">Judul</a></b>`)).toBe(
-      true,
-    );
-    expect(chunks[0]).not.toContain(`>${postUrl}</a>`);
+    expect(chunks[0].startsWith(postUrl)).toBe(true);
+    expect(chunks[0]).toContain("\n\n---\n\n<b>Judul</b>\n\n");
   });
 
   it("truncates long content into one chunk with a warning flag", () => {
@@ -199,7 +197,7 @@ describe("buildTelegramChunks", () => {
     expect(truncated).toBe(true);
     expect(chunks).toHaveLength(1);
     expect(chunks[0].length).toBeLessThanOrEqual(500);
-    expect(chunks[0]).toContain(`<b><a href="${postUrl}">Judul</a></b>`);
+    expect(chunks[0]).toContain(`${postUrl}\n\n---\n\n<b>Judul</b>\n\n`);
     expect(chunks[0]).toMatch(/…$/);
   });
 });
