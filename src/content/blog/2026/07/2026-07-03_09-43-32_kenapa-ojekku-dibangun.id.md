@@ -12,8 +12,8 @@ coverImage: "/assets/blog/kenapa-ojekku-dibangun-cover.svg"
 # updatedDate: ""
 # telegramUrl: ""          # set by pnpm tg-sync
 # telegramMessageIds: []   # set by pnpm tg-sync
-telegramUrl: "https://t.me/ojekku_channel/31"
-telegramMessageIds: [31]
+telegramUrl: "https://t.me/ojekku_channel/33"
+telegramMessageIds: [33]
 ---
 ## Aplikasi ojol lagi?
 
