@@ -7,7 +7,7 @@ publishDate: "2026-07-03T09:43:32"
 draft: false
 authorId: andri.ys.st@gmail.com
 # Optional fields:
-tags: ["Visi dan misi"]
+tags: []
 coverImage: "/assets/blog/kenapa-ojekku-dibangun-cover.svg"
 # updatedDate: ""
 # telegramUrl: ""          # set by pnpm tg-sync

@@ -10,6 +10,7 @@ import {
   getTelegramCoverStatus,
   isRemoteCoverImage,
   isStaleTelegramMessageError,
+  isUnchangedTelegramMessageError,
   isTelegramPhotoCover,
   listPostFiles,
   resolveCoverImagePath,
@@ -119,6 +120,26 @@ describe("isStaleTelegramMessageError", () => {
       false,
     );
     expect(isStaleTelegramMessageError(undefined)).toBe(false);
+  });
+});
+
+describe("isUnchangedTelegramMessageError", () => {
+  it("detects unchanged Telegram message errors", () => {
+    expect(
+      isUnchangedTelegramMessageError(
+        "Bad Request: message is not modified: specified new message content and reply markup are exactly the same as a current content and reply markup of the message",
+      ),
+    ).toBe(true);
+  });
+
+  it("returns false for other Telegram errors", () => {
+    expect(
+      isUnchangedTelegramMessageError("Bad Request: can't parse entities"),
+    ).toBe(false);
+    expect(
+      isUnchangedTelegramMessageError("Bad Request: message to edit not found"),
+    ).toBe(false);
+    expect(isUnchangedTelegramMessageError(undefined)).toBe(false);
   });
 });
 
