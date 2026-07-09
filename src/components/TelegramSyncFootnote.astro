@@ -1,0 +1,44 @@
+---
+import { t, type Locale } from '../lib/translations';
+
+interface Props {
+  lang: Locale;
+  telegramUrl: string;
+}
+
+const { lang, telegramUrl } = Astro.props;
+---
+
+<aside class="post-telegram-footnote" aria-label={t('telegramFootnoteLinkLabel', lang)}>
+  <p>
+    {t('telegramFootnotePrefix', lang)}{' '}
+    <a href={telegramUrl} target="_blank" rel="noopener noreferrer">
+      {t('telegramFootnoteLinkLabel', lang)}
+    </a>.
+    {' '}{t('telegramFootnoteSuffix', lang)}
+  </p>
+</aside>
+
+<style>
+  .post-telegram-footnote {
+    margin: 0 0 1rem;
+  }
+
+  .post-telegram-footnote p {
+    margin: 0;
+    font-family: var(--font-family-sans);
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  .post-telegram-footnote a {
+    color: var(--primary-color);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .post-telegram-footnote a:hover {
+    text-decoration-thickness: 2px;
+  }
+</style>

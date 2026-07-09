@@ -1,6 +1,7 @@
 ---
 import type { Locale } from '../lib/translations';
 import CommenterAvatar from './CommenterAvatar.astro';
+import TelegramSyncFootnote from './TelegramSyncFootnote.astro';
 
 interface Props {
   channelMessageId: number;
@@ -29,6 +30,7 @@ const labels = {
   data-lang={lang}
   data-telegram-url={telegramUrl}
 >
+  <TelegramSyncFootnote lang={lang} telegramUrl={telegramUrl} />
   <p class="post-list-meta post-list-engagement comment-reactions" data-comment-reactions data-telegram-url={telegramUrl} hidden></p>
   <h2 class="comment-section__title" data-comment-heading>{labels.title}</h2>
 

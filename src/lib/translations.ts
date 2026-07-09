@@ -59,6 +59,15 @@ const translations = {
     en: "for the latest product info.",
     id: "untuk info produk terbaru.",
   },
+  telegramFootnotePrefix: {
+    en: "This article was also published on",
+    id: "Artikel ini telah dipublikasikan juga di",
+  },
+  telegramFootnoteLinkLabel: { en: "Telegram", id: "Telegram" },
+  telegramFootnoteSuffix: {
+    en: "Comments and discussion happen there.",
+    id: "Kirimkan komentar dan tanggapan Anda di sana.",
+  },
 } as const;
 
 type StringKey = Exclude<keyof typeof translations, "pageOf">;
