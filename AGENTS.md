@@ -1,5 +1,8 @@
 # Ojekku Blog — AGENTS
 
+**Lifecycle:** Active. For the canonical PT Bangkit workspace map and repository ownership boundaries, see
+[`../bangkit-project/docs/repositories.md`](../bangkit-project/docs/repositories.md).
+
 ## What this repo is
 
 **Company-facing** content site for **Ojekku**. Not the founder's personal blog (`~/personal-blog`).
