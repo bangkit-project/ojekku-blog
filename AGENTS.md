@@ -39,3 +39,10 @@ See [`bangkit-project/AGENTS.md`](https://github.com/bangkit-project/bangkit-pro
 ## Assistant role
 
 Junior execution support — minimal scope, match existing patterns. Ask for clarification on high-level decisions (tone, content, brand).
+
+## Cross-repository E2E workflow
+
+- For cross-repository changes that need end-to-end coverage, document the required scenario in the relevant acceptance or runbook documentation under `/home/andri/ojekku-sandbox/docs/`. Keep independent service journeys in that service repository’s own E2E suite.
+- Finish implementation and the local build in the owning repository before building or running the sandbox. Never actively develop a source repository while building or running the sandbox; do this work sequentially.
+- If a sandbox build or E2E run exposes a gap in a service repository, stop the sandbox work. Switch to the owning service repository, fix the gap, and complete its local build; defer the sandbox build and E2E rerun until that work is finished.
+- Mark scenarios pending until they have actually run, then record concise evidence or blockers.
